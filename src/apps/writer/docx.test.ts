@@ -11,7 +11,7 @@ describe('DOCX conversion', () => {
   it('round-trips a Quire document through DOCX with layout metadata', async () => {
     const snapshot = { html: '<h1>Round trip</h1><p>Offline text.</p><table><tr><td>Cell</td></tr></table>', settings: { ...defaultSettings, paper: 'a4' as const, header: 'Header', footer: 'Footer', watermark: 'DRAFT' } };
     const bytes = await exportDocx(snapshot, 'Round trip'); expect(bytes.byteLength).toBeGreaterThan(1000);
-    const imported = await importDocx(bytes); expect(imported.html).toBe(snapshot.html); expect(imported.settings).toMatchObject({ paper: 'a4', header: 'Header', footer: 'Footer', watermark: 'DRAFT' });
+    const imported = await importDocx(bytes); expect(imported.html.replace(/<\/?tbody>/g, '')).toBe(snapshot.html); expect(imported.settings).toMatchObject({ paper: 'a4', header: 'Header', footer: 'Footer', watermark: 'DRAFT' });
   }, 20000);
   it('builds printable paged HTML with sanitized content', () => {
     const html = buildPrintHtml('<p onclick="alert(1)">Safe</p><script>bad()</script>', { ...defaultSettings, header: 'Report', footer: 'Private', watermark: 'DRAFT' }, 'Report');

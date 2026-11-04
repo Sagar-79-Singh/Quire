@@ -3,11 +3,11 @@ import { openDocumentFile, saveDocumentFile, exportPdfFile, printDocumentFile } 
 import type { ShellIO } from './io';
 import { resetShellStore, useShellStore } from './store';
 import { useWriterStore } from '../apps/writer/store';
-import { importDocx } from '../apps/writer/docx';
 import { defaultSettings } from '../apps/writer/model';
-vi.mock('../apps/writer/docx', () => ({ importDocx: vi.fn().mockResolvedValue({ title: 'Imported', html: '<p>Imported text</p>', settings: { ...defaultSettings, paper: 'a4' }, warnings: ['Style adjusted'] }), exportDocx: vi.fn().mockResolvedValue(new ArrayBuffer(8)), buildPrintHtml: vi.fn(() => '<html>Print</html>') }));
+const docxMocks = vi.hoisted(() => ({ importDocx: vi.fn(), exportDocx: vi.fn(), buildPrintHtml: vi.fn() }));
+vi.mock('../apps/writer/docx', () => ({ importDocx: docxMocks.importDocx, exportDocx: docxMocks.exportDocx, buildPrintHtml: docxMocks.buildPrintHtml }));
 function io(overrides: Partial<ShellIO> = {}): ShellIO { return { isDesktop: true, platform: 'linux', loadRecents: vi.fn(), saveRecents: vi.fn(), windowControl: vi.fn(), toggleFullscreen: vi.fn(), onMenuAction: vi.fn(() => () => {}), openFile: vi.fn().mockResolvedValue({ name: 'Imported.docx', path: '/tmp/imported.docx', data: new ArrayBuffer(4) }), saveFile: vi.fn().mockResolvedValue({ name: 'Saved.docx', path: '/tmp/saved.docx' }), exportPdf: vi.fn().mockResolvedValue({ name: 'Saved.pdf', path: '/tmp/saved.pdf' }), printFile: vi.fn().mockResolvedValue(undefined), ...overrides }; }
-beforeEach(() => { resetShellStore(); useWriterStore.setState({ documents: {} }); vi.mocked(importDocx).mockResolvedValue({ title: 'Imported', html: '<p>Imported text</p>', settings: { ...defaultSettings, paper: 'a4' }, warnings: ['Style adjusted'] }); });
+beforeEach(() => { resetShellStore(); useWriterStore.setState({ documents: {} }); docxMocks.importDocx.mockResolvedValue({ title: 'Imported', html: '<p>Imported text</p>', settings: { ...defaultSettings, paper: 'a4' }, warnings: ['Style adjusted'] }); docxMocks.exportDocx.mockResolvedValue(new ArrayBuffer(8)); docxMocks.buildPrintHtml.mockReturnValue('<html>Print</html>'); });
 describe('file operations', () => {
   it('opens a DOCX into an isolated Writer tab and records recents', async () => {
     const adapter = io(); const result = await openDocumentFile(adapter); expect(result.ok, result.message).toBe(true); expect(result.message).toBe('Style adjusted');
