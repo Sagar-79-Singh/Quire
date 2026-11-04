@@ -17,9 +17,9 @@ describe('Writer body', () => {
   });
   it('wires formatting, styles and view controls', async () => {
     useShellStore.getState().openDocument({ title: 'First', content: 'Words' }); mount(); const editor = await screen.findByTestId('writer-editor'); editor.focus();
-    const bold = screen.getAllByRole('button', { name: 'Bold', exact: true })[0]; if (bold) await userEvent.click(bold);
+    const bold = screen.getAllByRole('button', { name: 'Bold' })[0]; if (bold) await userEvent.click(bold);
     expect(document.execCommand).toHaveBeenCalled();
-    const normal = screen.getAllByRole('button', { name: 'Heading 1', exact: true })[0]; if (normal) await userEvent.click(normal);
+    const normal = screen.getAllByRole('button', { name: 'Heading 1' })[0]; if (normal) await userEvent.click(normal);
     expect(document.execCommand).toHaveBeenCalledWith('formatBlock', false, 'h1');
     await userEvent.click(screen.getAllByRole('button', { name: 'Gridlines' })[0]!); expect(screen.getByTestId('writer-canvas')).toHaveClass('with-gridlines');
     await userEvent.click(screen.getAllByRole('button', { name: 'Ruler' })[0]!); expect(screen.queryByRole('img', { name: 'Horizontal ruler' })).not.toBeInTheDocument();

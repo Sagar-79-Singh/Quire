@@ -10,8 +10,8 @@ beforeEach(() => { resetShellStore(); });
 describe('App shell', () => {
   it('opens Home, creates Writer and returns home without losing tabs', async () => {
     const io = createIO(); render(<App io={io} />); expect(screen.getByRole('heading', { name: 'Make room for a good idea.' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Blank document', exact: true })); expect(await screen.findByRole('region', { name: 'Writer' })).toBeInTheDocument();
-    const home = screen.getAllByRole('button', { name: 'Home', exact: true })[0]; if (home) await userEvent.click(home); expect(screen.getByRole('heading', { name: 'Make room for a good idea.' })).toBeInTheDocument(); expect(useShellStore.getState().tabs).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Blank document' })); expect(await screen.findByRole('region', { name: 'Writer' })).toBeInTheDocument();
+    const home = screen.getAllByRole('button', { name: 'Home' })[0]; if (home) await userEvent.click(home); expect(screen.getByRole('heading', { name: 'Make room for a good idea.' })).toBeInTheDocument(); expect(useShellStore.getState().tabs).toHaveLength(1);
     await waitFor(() => { expect(io.loadRecents).toHaveBeenCalled(); });
   });
   it('routes native menu commands and shell shortcuts', async () => {
@@ -25,8 +25,8 @@ describe('App shell', () => {
     send('close-document'); send('close-document'); send('home'); send('save'); send('save-as'); send('export-pdf'); send('print'); send('redo'); send('find');
   });
   it('opens backstage and hydrates recents before persisting', async () => {
-    const io = createIO(); render(<App io={io} />); await userEvent.click(screen.getByRole('button', { name: 'Blank document', exact: true }));
-    await screen.findByRole('region', { name: 'Writer' }); await userEvent.click(screen.getByRole('button', { name: 'File', exact: true })); expect(screen.getByRole('dialog', { name: 'File' })).toBeInTheDocument();
+    const io = createIO(); render(<App io={io} />); await userEvent.click(screen.getByRole('button', { name: 'Blank document' }));
+    await screen.findByRole('region', { name: 'Writer' }); await userEvent.click(screen.getByRole('button', { name: 'File' })); expect(screen.getByRole('dialog', { name: 'File' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}'); expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     act(() => { useShellStore.getState().addRecent({ id: 'r', title: 'Test', path: '/test.docx', appType: 'writer', templateId: 'blank', modifiedAt: 100 }); });
     await waitFor(() => { expect(io.saveRecents).toHaveBeenCalledWith([expect.objectContaining({ id: 'r' })]); });

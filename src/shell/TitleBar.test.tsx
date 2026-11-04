@@ -24,10 +24,10 @@ describe('TitleBar', () => {
     await userEvent.clear(search); await userEvent.click(search); await userEvent.keyboard('{Enter}'); expect(onAction).toHaveBeenCalledWith('new'); const homeButton = screen.getAllByRole('button', { name: 'Home' })[0]; if (homeButton) await userEvent.click(homeButton); expect(onAction).toHaveBeenCalledWith('home');
   });
   it('has real disabled pending controls and browser window controls', () => {
-    render(<TitleBar io={io} onAction={vi.fn()} />); expect(screen.getByRole('switch', { name: 'AutoSave' })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Save', exact: true })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Close', exact: true })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    render(<TitleBar io={io} onAction={vi.fn()} />); expect(screen.getByRole('switch', { name: 'AutoSave' })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled(); expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
   });
   it('delegates native window controls through the typed API', async () => {
     render(<TitleBar io={{ ...io, isDesktop: true }} onAction={vi.fn()} />); await userEvent.click(screen.getByRole('button', { name: 'Minimize' })); expect(io.windowControl).toHaveBeenCalledWith('minimize');
-    await userEvent.click(screen.getByRole('button', { name: 'Maximize' })); expect(io.windowControl).toHaveBeenCalledWith('maximize'); await userEvent.click(screen.getByRole('button', { name: 'Close', exact: true })); expect(io.windowControl).toHaveBeenCalledWith('close');
+    await userEvent.click(screen.getByRole('button', { name: 'Maximize' })); expect(io.windowControl).toHaveBeenCalledWith('maximize'); await userEvent.click(screen.getByRole('button', { name: 'Close' })); expect(io.windowControl).toHaveBeenCalledWith('close');
   });
 });

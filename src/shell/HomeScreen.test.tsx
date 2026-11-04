@@ -7,9 +7,9 @@ beforeEach(() => { resetShellStore(); });
 const recent = { id: 'r1', title: 'Project notes', path: '/documents/notes.docx', appType: 'writer' as const, templateId: 'notes', modifiedAt: Date.UTC(2025, 5, 10, 10) };
 describe('HomeScreen', () => {
   it('renders blank and six original templates, and opens a blank Writer tab', async () => {
-    render(<HomeScreen />); expect(screen.getByRole('button', { name: 'Blank document', exact: true })).toBeInTheDocument();
+    render(<HomeScreen />); expect(screen.getByRole('button', { name: 'Blank document' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create a document: Resume' })).toBeInTheDocument(); expect(screen.getByRole('heading', { level: 1 }).textContent).toMatchInlineSnapshot('"Make room for a good idea."');
-    await userEvent.click(screen.getByRole('button', { name: 'Blank document', exact: true })); expect(useShellStore.getState().tabs).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Blank document' })); expect(useShellStore.getState().tabs).toHaveLength(1);
   });
   it('opens meaningful starter content and filters templates', async () => {
     render(<HomeScreen />); await userEvent.click(screen.getByRole('button', { name: 'Create a document: Meeting notes' }));
@@ -18,9 +18,9 @@ describe('HomeScreen', () => {
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'missing' } }); expect(screen.getByText('No templates match your search.')).toBeInTheDocument();
   });
   it('opens files through the injected handler and navigates between sections', async () => {
-    const onOpen = vi.fn(); render(<HomeScreen onOpen={onOpen} />); await userEvent.click(screen.getByRole('button', { name: 'Open', exact: true })); expect(onOpen).toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Recent', exact: true })); expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Home', exact: true })); await userEvent.click(screen.getByRole('button', { name: 'New', exact: true })); expect(useShellStore.getState().tabs).toHaveLength(1);
+    const onOpen = vi.fn(); render(<HomeScreen onOpen={onOpen} />); await userEvent.click(screen.getByRole('button', { name: 'Open' })); expect(onOpen).toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Recent' })); expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Home' })); await userEvent.click(screen.getByRole('button', { name: 'New' })); expect(useShellStore.getState().tabs).toHaveLength(1);
   });
   it('virtualizes twenty recents, removes one and supports injected opening', async () => {
     useShellStore.getState().replaceRecents(Array.from({ length: 20 }, (_, index) => ({ ...recent, id: `r${index}`, title: `Document ${index}`, path: `/document-${index}.docx`, modifiedAt: recent.modifiedAt + index })));
