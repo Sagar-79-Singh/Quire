@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { en } from '../i18n/en';
 import { ToastProvider, useToast } from '../components/ui/Toast';
 import { ThemeProvider } from '../theme/ThemeProvider';
@@ -48,7 +48,9 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
       case 'toggle-ribbon': state.setRibbonMode(state.ribbonMode === 'compact' ? 'expanded' : 'compact'); break;
       case 'fullscreen': void io.toggleFullscreen().catch(() => { notify(en.toast.window); }); break;
       case 'open': case 'save': case 'save-as': case 'export-pdf': case 'print': runFile(action); break;
-      case 'undo': case 'redo': case 'find': writerCommands.dispatch(action); break;
+      case 'undo': case 'redo': case 'find': case 'replace': case 'spelling': writerCommands.dispatch(action); break;
+      case 'word-count': writerCommands.dispatch('wordCount'); break;
+      case 'about': writerCommands.dispatch('about'); break;
     }
   }, [io, notify]);
   useEffect(() => {
@@ -57,6 +59,16 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
     return () => { cancelled = true; };
   }, [io]);
   useEffect(() => { if (ready) void io.saveRecents(recents).catch(() => { notify(en.toast.recentSave); }); }, [io, ready, recents, notify]);
+  const autoSave = useShellStore((state) => state.autoSave);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    if (!autoSave || !document?.dirty || !document.path) return;
+    autoSaveTimer.current = setTimeout(() => { void saveDocumentFile(io).then((result) => { if (!result.ok && result.message) notify(result.message); }).catch(() => { notify(en.toast.file); }); }, 1200);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [autoSave, document?.id, document?.dirty, document?.content, document?.path, io, notify]);
+  useEffect(() => { try { localStorage.setItem('quire.autosave', autoSave ? '1' : '0'); } catch { /* preference is best-effort */ } }, [autoSave]);
+  useEffect(() => { try { useShellStore.getState().setAutoSave(localStorage.getItem('quire.autosave') === '1'); } catch { /* default off */ } }, []);
   useEffect(() => io.onMenuAction(dispatch), [io, dispatch]);
   useEffect(() => installShortcuts(window, dispatch), [dispatch]);
   const ActiveApp = document ? appRegistry[document.appType].component : null;

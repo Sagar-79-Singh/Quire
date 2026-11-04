@@ -62,7 +62,7 @@ export default function WriterApp() {
   }, [documentTab?.id, insert, notify]);
   useEffect(() => writerCommands.subscribe(({ name, value }) => {
     if (['undo', 'redo'].includes(name)) command(name, value);
-    else if (['find', 'replace', 'wordCount', 'spelling', 'comment'].includes(name)) setDialog(name as DialogKind);
+    else if (['find', 'replace', 'wordCount', 'spelling', 'comment', 'about'].includes(name)) setDialog(name as DialogKind);
     else command(name, value);
   }), [command]);
   const merge = useCallback((): void => {

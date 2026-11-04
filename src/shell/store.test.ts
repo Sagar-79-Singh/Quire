@@ -6,6 +6,11 @@ const setup = () => {
   return createShellStore(() => 100, () => `document-${++id}`);
 };
 describe('shell store', () => {
+  it('marks a saved document clean without touching other tabs', () => {
+    const store = createShellStore(() => 100, () => 'doc'); store.getState().openDocument({ title: 'Draft' }); store.getState().setDocumentContent('doc', 'Edited'); store.getState().markSaved('doc', '/tmp/draft.docx', 'Draft');
+    expect(store.getState().tabs[0]).toMatchObject({ path: '/tmp/draft.docx', title: 'Draft', dirty: false }); store.getState().markSaved('missing', '/x'); expect(store.getState().tabs).toHaveLength(1);
+  });
+
   it('opens, activates, renames and edits isolated documents', () => {
     const store = setup();
     const first = store.getState().openDocument({ title: '  First  ', content: 'Original' });

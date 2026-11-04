@@ -28,7 +28,7 @@ export async function saveDocumentFile(io: ShellIO, saveAs = false): Promise<Fil
     const result = await io.saveFile({ name: `${tab.title.replace(/\.docx$/i, '')}.docx`, path: saveAs ? null : tab.path, data });
     if (!result) return { ok: true };
     useShellStore.getState().markSaved(tab.id, result.path, result.name.replace(/\.docx$/i, ''));
-    const recent: RecentDocument = { id: tab.id, title: result.name.replace(/\.docx$/i, ''), path: result.path, appType: 'writer', templateId: tab.templateId, modifiedAt: Date.now() };
+    const recent: RecentDocument = { id: tab.id, title: result.name.replace(/\.docx$/i, ''), path: result.path, appType: 'writer', templateId: tab.templateId, modifiedAt: Date.now(), thumbnail: recentThumbnail(result.name.replace(/\.docx$/i, '')) };
     useShellStore.getState().addRecent(recent);
     return { ok: true, message: en.toast.saved };
   } catch { return { ok: false, message: en.toast.file }; }
@@ -44,4 +44,10 @@ export async function printDocumentFile(io: ShellIO): Promise<FileOperationResul
   if (!tab || !writer) return { ok: false, message: en.common.noDocument };
   try { await io.printFile({ name: tab.title, html: buildPrintHtml(writer.html, writer.settings, tab.title) }); return { ok: true }; }
   catch { return { ok: false, message: en.toast.file }; }
+}
+
+export function recentThumbnail(title: string): string {
+  const safe = title.replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char] ?? char).slice(0, 40);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="60" viewBox="0 0 48 60"><rect x="1" y="1" width="46" height="58" rx="3" fill="#fff" stroke="#d8dde5"/><rect x="7" y="9" width="24" height="3" rx="1" fill="#2B579A"/><rect x="7" y="17" width="34" height="2" fill="#d8dde5"/><rect x="7" y="23" width="30" height="2" fill="#d8dde5"/><rect x="7" y="29" width="34" height="2" fill="#d8dde5"/><text x="7" y="45" font-family="Arial" font-size="5" fill="#605e5c">${safe}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }

@@ -1,12 +1,13 @@
-export const menuActions = ['new', 'open', 'save', 'save-as', 'export-pdf', 'print', 'close-document', 'home', 'undo', 'redo', 'find', 'next-tab', 'previous-tab', 'fullscreen', 'zoom-in', 'zoom-out', 'zoom-reset', 'theme-light', 'theme-dark', 'theme-system', 'toggle-panel', 'toggle-ribbon'] as const;
+export const menuActions = ['new', 'open', 'save', 'save-as', 'export-pdf', 'print', 'close-document', 'home', 'undo', 'redo', 'find', 'next-tab', 'previous-tab', 'fullscreen', 'zoom-in', 'zoom-out', 'zoom-reset', 'theme-light', 'theme-dark', 'theme-system', 'toggle-panel', 'toggle-ribbon', 'replace', 'word-count', 'spelling', 'about'] as const;
 export type MenuAction = typeof menuActions[number];
 export interface ShortcutInput { key: string; code?: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean; }
 const bindings: Record<string, MenuAction> = {
-  n: 'new', o: 'open', s: 'save', p: 'print', z: 'undo', y: 'redo', f: 'find', w: 'close-document',
+  n: 'new', o: 'open', s: 'save', p: 'print', z: 'undo', y: 'redo', f: 'find', h: 'replace', w: 'close-document',
   '=': 'zoom-in', '+': 'zoom-in', '-': 'zoom-out', '_': 'zoom-out', '0': 'zoom-reset',
 };
 export function resolveShortcut(event: ShortcutInput): MenuAction | null {
   if (event.altKey) return null;
+  if (event.key === 'F7' && !event.ctrlKey && !event.metaKey && !event.shiftKey) return 'spelling';
   if (event.key === 'F11' && !event.ctrlKey && !event.metaKey && !event.shiftKey) return 'fullscreen';
   if (!(event.ctrlKey || event.metaKey)) return null;
   const key = event.key.toLowerCase();
