@@ -14,6 +14,8 @@ import { appRegistry } from './appRegistry';
 import { writerCommands } from '../apps/writer/commands';
 import { installShortcuts } from './shortcuts';
 import type { MenuAction } from './shortcuts';
+import { AppContext } from './AppContext';
+import { openDocumentFile, saveDocumentFile, exportPdfFile, printDocumentFile } from './fileOperations';
 import { Icon } from '../components/ui/Icon';
 
 function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
@@ -23,6 +25,10 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
   const recents = useShellStore((state) => state.recents);
   const backstageOpen = useShellStore((state) => state.backstageOpen);
   const [ready, setReady] = useState(false);
+  const runFile = useCallback((action: 'open' | 'save' | 'save-as' | 'export-pdf' | 'print', path?: string): void => {
+    const operation = action === 'open' ? openDocumentFile(io, path) : action === 'save' ? saveDocumentFile(io) : action === 'save-as' ? saveDocumentFile(io, true) : action === 'export-pdf' ? exportPdfFile(io) : printDocumentFile(io);
+    void operation.then((result) => { if (result.message) notify(result.message, result.ok ? 'success' : 'error'); }).catch(() => { notify(en.toast.file); });
+  }, [io, notify, runFile]);
   const dispatch = useCallback((action: MenuAction) => {
     const state = useShellStore.getState();
     const active = getActiveDocument(state);
@@ -41,7 +47,7 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
       case 'toggle-panel': state.setPanelOpen(!state.panelOpen); break;
       case 'toggle-ribbon': state.setRibbonMode(state.ribbonMode === 'compact' ? 'expanded' : 'compact'); break;
       case 'fullscreen': void io.toggleFullscreen().catch(() => { notify(en.toast.window); }); break;
-      case 'open': case 'save': case 'save-as': case 'export-pdf': case 'print': notify(en.title.filePending, 'info'); break;
+      case 'open': case 'save': case 'save-as': case 'export-pdf': case 'print': runFile(action); break;
       case 'undo': case 'redo': case 'find': writerCommands.dispatch(action); break;
     }
   }, [io, notify]);
@@ -54,6 +60,6 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
   useEffect(() => io.onMenuAction(dispatch), [io, dispatch]);
   useEffect(() => installShortcuts(window, dispatch), [dispatch]);
   const ActiveApp = document ? appRegistry[document.appType].component : null;
-  return <div className="app-shell"><TitleBar io={io} onAction={dispatch} />{document && <div className="file-tabline"><button className={`file-tab ${backstageOpen ? 'is-active' : ''}`} aria-label={en.backstage.title} aria-expanded={backstageOpen} onClick={() => { useShellStore.getState().setBackstageOpen(!backstageOpen); }}>{en.backstage.title}</button><TabBar /></div>}{document ? <main className="app-content"><Suspense fallback={<div className="app-loading" role="status"><Icon name="writer" size={32} /><span>{en.app.loading}</span></div>}>{ActiveApp && <ActiveApp />}</Suspense></main> : <main className="app-content"><HomeScreen /></main>}<StatusBar />{backstageOpen && <Backstage />}</div>;
+  return <AppContext.Provider value={{ io, dispatch }}><div className="app-shell"><TitleBar io={io} onAction={dispatch} />{document && <div className="file-tabline"><button className={`file-tab ${backstageOpen ? 'is-active' : ''}`} aria-label={en.backstage.title} aria-expanded={backstageOpen} onClick={() => { useShellStore.getState().setBackstageOpen(!backstageOpen); }}>{en.backstage.title}</button><TabBar /></div>}{document ? <main className="app-content"><Suspense fallback={<div className="app-loading" role="status"><Icon name="writer" size={32} /><span>{en.app.loading}</span></div>}>{ActiveApp && <ActiveApp />}</Suspense></main> : <main className="app-content"><HomeScreen onOpen={() => { runFile('open'); }} onOpenRecent={(recent) => { runFile('open', recent.path); }} /></main>}<StatusBar />{backstageOpen && <Backstage onAction={dispatch} />}</div></AppContext.Provider>;
 }
 export default function App({ io }: { io?: ShellIO }) { return <ToastProvider><ThemeProvider><Shell injectedIO={io} /></ThemeProvider></ToastProvider>; }

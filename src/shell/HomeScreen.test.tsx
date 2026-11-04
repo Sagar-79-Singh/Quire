@@ -17,8 +17,8 @@ describe('HomeScreen', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search templates' }), { target: { value: 'resume' } }); expect(screen.getByRole('button', { name: 'Create a document: Resume' })).toBeInTheDocument(); expect(screen.queryByRole('button', { name: 'Create a document: Meeting notes' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'missing' } }); expect(screen.getByText('No templates match your search.')).toBeInTheDocument();
   });
-  it('has real disabled file opening and navigates between sections', async () => {
-    render(<HomeScreen />); expect(screen.getByRole('button', { name: 'Open', exact: true })).toBeDisabled();
+  it('opens files through the injected handler and navigates between sections', async () => {
+    const onOpen = vi.fn(); render(<HomeScreen onOpen={onOpen} />); await userEvent.click(screen.getByRole('button', { name: 'Open', exact: true })); expect(onOpen).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Recent', exact: true })); expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Home', exact: true })); await userEvent.click(screen.getByRole('button', { name: 'New', exact: true })); expect(useShellStore.getState().tabs).toHaveLength(1);
   });

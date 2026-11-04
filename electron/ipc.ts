@@ -4,7 +4,8 @@ import type { IpcMain, IpcMainInvokeEvent } from 'electron';
 import { normalizeRecents } from '../src/shell/recents';
 import type { RecentDocument } from '../src/shell/recents';
 import type { WindowAction } from '../src/shell/protocol';
-import { IPC, isWindowAction } from '../src/shell/protocol';
+import { IPC, isPrintRequest, isSaveRequest, isWindowAction } from '../src/shell/protocol';
+import type { FileOperations } from './files';
 import { en } from '../src/i18n/en';
 
 export interface ShellWindow {
@@ -28,6 +29,7 @@ export interface IPCDependencies {
   dataDirectory: string;
   isTrustedSender: (event: IpcMainInvokeEvent) => boolean;
   fs?: PersistenceFS;
+  fileOperations?: FileOperations;
 }
 const defaultFS: PersistenceFS = {
   readFile: (path) => readFile(path, 'utf8'),
@@ -57,6 +59,13 @@ export function registerShellIPC(dependencies: IPCDependencies): () => void {
     await fs.writeFile(temporary, JSON.stringify(normalizeRecents(value)));
     await fs.rename(temporary, path);
   });
+  if (dependencies.fileOperations) {
+    const files = dependencies.fileOperations;
+    ipcMain.handle(IPC.openDocument, async (event, value: unknown) => { guard(event); if (value !== undefined && (typeof value !== 'string' || value.length > 4096)) throw new TypeError(en.toast.file); return files.openDocument(value); });
+    ipcMain.handle(IPC.saveDocument, async (event, value: unknown) => { guard(event); if (!isSaveRequest(value)) throw new TypeError(en.toast.file); return files.saveDocument(value); });
+    ipcMain.handle(IPC.exportPdf, async (event, value: unknown) => { guard(event); if (!isPrintRequest(value)) throw new TypeError(en.toast.pdf); return files.exportPdf(value); });
+    ipcMain.handle(IPC.printDocument, async (event, value: unknown) => { guard(event); if (!isPrintRequest(value)) throw new TypeError(en.toast.file); return files.printDocument(value); });
+  }
   ipcMain.handle(IPC.windowControl, (event, value: unknown): void => {
     const window = guard(event);
     if (!isWindowAction(value)) throw new TypeError(en.toast.window);

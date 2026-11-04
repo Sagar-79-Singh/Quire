@@ -5,7 +5,7 @@ import App from './App';
 import type { ShellIO } from './io';
 import type { MenuAction } from './shortcuts';
 import { resetShellStore, useShellStore } from './store';
-function createIO(): ShellIO { return { isDesktop: false, platform: 'browser', loadRecents: vi.fn().mockResolvedValue([]), saveRecents: vi.fn().mockResolvedValue(true), windowControl: vi.fn().mockResolvedValue(undefined), toggleFullscreen: vi.fn().mockResolvedValue(undefined), onMenuAction: vi.fn(() => () => {}) }; }
+function createIO(): ShellIO { return { isDesktop: false, platform: 'browser', loadRecents: vi.fn().mockResolvedValue([]), saveRecents: vi.fn().mockResolvedValue(true), windowControl: vi.fn().mockResolvedValue(undefined), toggleFullscreen: vi.fn().mockResolvedValue(undefined), onMenuAction: vi.fn(() => () => {}), openFile: vi.fn().mockResolvedValue(null), saveFile: vi.fn().mockResolvedValue(null), exportPdf: vi.fn().mockResolvedValue(null), printFile: vi.fn().mockResolvedValue(undefined) }; }
 beforeEach(() => { resetShellStore(); });
 describe('App shell', () => {
   it('opens Home, creates Writer and returns home without losing tabs', async () => {

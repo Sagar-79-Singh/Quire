@@ -14,9 +14,10 @@ import { useWriterStore } from './store';
 import { escapeHtml, htmlToText, shapeHtml } from './model';
 import type { PageSettings, ShapeKind } from './model';
 import { writerCommands } from './commands';
-import type { ShellIO } from '../../shell/io';
+import { useAppContext } from '../../shell/AppContext';
 
-export default function WriterApp({ io, onFile }: { io?: ShellIO; onFile?: (action: 'save' | 'export-pdf' | 'print') => void }) {
+export default function WriterApp() {
+  const context = useAppContext();
   const documentTab = useShellStore(getActiveDocument);
   const view = useShellStore((state) => state.viewMode);
   const zoom = useShellStore((state) => state.zoom);
@@ -75,7 +76,7 @@ export default function WriterApp({ io, onFile }: { io?: ShellIO; onFile?: (acti
   }, [recipients, documentTab?.id, documentTab?.title, notify, writer?.settings]);
   if (!documentTab || !writer) return null;
   return <section className="writer-app" aria-label={en.apps.writer}>
-    <WriterRibbon doc={writer} onCommand={command} onDialog={setDialog} onSettings={configure} onStyle={applyStyle} onFile={onFile ?? (() => { useShellStore.getState().setBackstageOpen(true); })} ruler={ruler} gridlines={gridlines} onRuler={() => { setRuler(!ruler); }} onGridlines={() => { setGridlines(!gridlines); }} onInsert={insert} recipients={recipients} onRecipients={setRecipients} onMerge={merge} isDesktop={io?.isDesktop ?? false} />
+    <WriterRibbon doc={writer} onCommand={command} onDialog={setDialog} onSettings={configure} onStyle={applyStyle} onFile={(action) => { if (context) context.dispatch(action); else useShellStore.getState().setBackstageOpen(true); }} ruler={ruler} gridlines={gridlines} onRuler={() => { setRuler(!ruler); }} onGridlines={() => { setGridlines(!gridlines); }} onInsert={insert} recipients={recipients} onRecipients={setRecipients} onMerge={merge} isDesktop={context?.io.isDesktop ?? false} />
     <div className="writer-workspace"><div className="writer-canvas-wrap">{ruler && <Ruler settings={writer.settings} zoom={zoom} />}<div className="writer-pages-row">{ruler && <Ruler settings={writer.settings} orientation="vertical" zoom={zoom} />}<Pages settings={writer.settings} pageCount={writer.pageCount} zoom={zoom} gridlines={gridlines} view={view}><Editor ref={editor} documentId={documentTab.id} onError={notify} /></Pages></div></div><RightPanel documentId={documentTab.id} onStyle={applyStyle} onCommand={command} /></div>
     {dialog && <WriterDialogs kind={dialog} onClose={() => { setDialog(null); }} editor={editor.current} settings={writer.settings} onSettings={configure} onInsert={insert} onNotify={notify} onComment={addComment} onZoom={(value) => { useShellStore.getState().setZoom(value); }} zoom={zoom} html={writer.html} />}
   </section>;

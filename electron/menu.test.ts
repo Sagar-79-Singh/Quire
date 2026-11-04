@@ -11,8 +11,8 @@ describe('native menu', () => {
   it('adds native app roles on the desktop variant that needs them', () => {
     const template = createMenuTemplate(vi.fn(), true); expect(template[0]?.label).toBe('Quire'); expect(template[0]?.submenu).toEqual(expect.arrayContaining([expect.objectContaining({ role: 'quit' })]));
   });
-  it('really disables file and editor actions until their modules are available', () => {
+  it('enables file and editor actions once their modules are connected', () => {
     const items = createMenuTemplate(vi.fn(), false).flatMap((item) => Array.isArray(item.submenu) ? item.submenu : []);
-    expect(items.find((item) => item.label === 'Open')?.enabled).toBe(false); expect(items.find((item) => item.label === 'Save')?.enabled).toBe(false); expect(items.find((item) => item.label === 'Undo')?.enabled).toBe(false);
+    expect(items.find((item) => item.label === 'Open')?.enabled).not.toBe(false); expect(items.find((item) => item.label === 'Save')?.enabled).not.toBe(false); expect(items.find((item) => item.label === 'Undo')?.enabled).not.toBe(false);
   });
 });

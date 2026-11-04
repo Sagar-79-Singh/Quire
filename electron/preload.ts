@@ -11,6 +11,10 @@ export function createBridge(renderer: Pick<typeof ipcRenderer, 'invoke' | 'on' 
     setRecents: (documents) => renderer.invoke(IPC.setRecents, documents),
     windowControl: (action) => renderer.invoke(IPC.windowControl, action),
     toggleFullscreen: () => renderer.invoke(IPC.fullscreen),
+    openDocument: (path) => renderer.invoke(IPC.openDocument, path),
+    saveDocument: (request) => renderer.invoke(IPC.saveDocument, request),
+    exportPdf: (request) => renderer.invoke(IPC.exportPdf, request),
+    printDocument: (request) => renderer.invoke(IPC.printDocument, request),
     onMenuAction: (listener) => {
       const wrapped = (_event: IpcRendererEvent, value: unknown): void => { if (isMenuAction(value)) listener(value); };
       renderer.on(IPC.menuAction, wrapped);

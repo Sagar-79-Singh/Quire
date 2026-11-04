@@ -43,6 +43,7 @@ export interface ShellState {
   cycleDocument: (direction: 1 | -1) => void;
   renameDocument: (id: string, title: string) => void;
   setDocumentContent: (id: string, content: string) => void;
+  markSaved: (id: string, path: string, title?: string) => void;
   setTheme: (theme: ThemePreference) => void;
   setAutoSave: (enabled: boolean) => void;
   setRibbonMode: (mode: RibbonMode) => void;
@@ -95,6 +96,7 @@ export function createShellStore(now: () => number = Date.now, identify: () => s
       return { tabs: state.tabs.map((tab) => tab.id === id && tab.title !== clean ? { ...tab, title: clean, dirty: true } : tab) };
     }),
     setDocumentContent: (id, content) => set((state) => ({ tabs: state.tabs.map((tab) => tab.id === id ? { ...tab, content, dirty: true } : tab) })),
+    markSaved: (id, path, title) => set((state) => ({ tabs: state.tabs.map((tab) => tab.id === id ? { ...tab, path, title: title ?? tab.title, dirty: false } : tab) })),
     setTheme: (theme) => set({ theme }),
     setAutoSave: (autoSave) => set({ autoSave }),
     setRibbonMode: (ribbonMode) => set({ ribbonMode }),

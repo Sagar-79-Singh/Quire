@@ -25,8 +25,8 @@ export function TemplatePreview({ template }: { template?: StarterTemplate }) {
     <div className="mini-page">{template ? <><div className="mini-accent" /><div className="mini-eyebrow">{en.app.name}</div><div className="mini-heading">{template.heading}</div><div className="mini-rule" />{template.lines.map((line, index) => <div className="mini-section" key={line}><span>{line}</span><i /><i style={{ width: `${78 - index * 9}%` }} /></div>)}</> : <Icon name="plus" size={32} />}</div>
   </div>;
 }
-export interface HomeScreenProps { onOpenRecent?: (document: RecentDocument) => void; now?: number; }
-export function HomeScreen({ onOpenRecent, now = Date.now() }: HomeScreenProps) {
+export interface HomeScreenProps { onOpen?: () => void; onOpenRecent?: (document: RecentDocument) => void; now?: number; }
+export function HomeScreen({ onOpen, onOpenRecent, now = Date.now() }: HomeScreenProps) {
   const [query, setQuery] = useState('');
   const [scrollTop, setScrollTop] = useState(0);
   const [activeNav, setActiveNav] = useState('home');
@@ -45,7 +45,7 @@ export function HomeScreen({ onOpenRecent, now = Date.now() }: HomeScreenProps) 
       <nav className="home-nav" aria-label={en.nav.home}>
         <button className={activeNav === 'home' ? 'is-active' : ''} aria-label={en.nav.home} onClick={() => { setActiveNav('home'); if (homeMain.current) homeMain.current.scrollTop = 0; }}><Icon name="home" size={20} />{en.nav.home}</button>
         <button aria-label={en.nav.new} onClick={() => { create(); }}><Icon name="plus" size={20} />{en.nav.new}</button>
-        <button disabled title={en.title.filePending} aria-label={en.nav.open}><Icon name="folder" size={20} />{en.nav.open}</button>
+        <button disabled={!onOpen} title={onOpen ? en.nav.open : en.title.filePending} aria-label={en.nav.open} onClick={() => { onOpen?.(); }}><Icon name="folder" size={20} />{en.nav.open}</button>
         <button className={activeNav === 'recent' ? 'is-active' : ''} aria-label={en.nav.recent} onClick={() => { setActiveNav('recent'); recentSection.current?.scrollIntoView({ block: 'start' }); }}><Icon name="clock" size={20} />{en.nav.recent}</button>
       </nav>
       <div className="home-sidebar-bottom"><ThemeToggle /><div className="private-label"><Icon name="shield" /><span>{en.app.offline}</span></div><span className="home-author">{en.app.by}</span></div>

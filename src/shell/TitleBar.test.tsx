@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TitleBar } from './TitleBar';
 import type { ShellIO } from './io';
 import { resetShellStore, useShellStore } from './store';
-const io: ShellIO = { isDesktop: false, platform: 'browser', loadRecents: vi.fn(), saveRecents: vi.fn(), windowControl: vi.fn(), toggleFullscreen: vi.fn(), onMenuAction: vi.fn(() => () => {}) };
+const io: ShellIO = { isDesktop: false, platform: 'browser', loadRecents: vi.fn(), saveRecents: vi.fn(), windowControl: vi.fn(), toggleFullscreen: vi.fn(), onMenuAction: vi.fn(() => () => {}), openFile: vi.fn().mockResolvedValue(null), saveFile: vi.fn().mockResolvedValue(null), exportPdf: vi.fn().mockResolvedValue(null), printFile: vi.fn().mockResolvedValue(undefined) };
 beforeEach(() => { resetShellStore(); });
 describe('TitleBar', () => {
   it('renames inline and commits with Enter', async () => {
