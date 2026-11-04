@@ -8,7 +8,22 @@ import { exportDocx } from '../../src/apps/writer/docx';
 import { defaultSettings } from '../../src/apps/writer/model';
 
 let app: ElectronApplication; let page: Page;
-test.beforeAll(async () => { globalThis.DOMParser = new JSDOM().window.DOMParser; app = await electron.launch({ args: ['dist-electron/main/index.js'] }); page = await app.firstWindow(); });
+const consoleErrors: string[] = [];
+test.beforeAll(async () => {
+  globalThis.DOMParser = new JSDOM().window.DOMParser;
+  app = await electron.launch({ args: ['dist-electron/main/index.js'] });
+  page = await app.firstWindow();
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', (error) => consoleErrors.push(error.message));
+  await page.waitForLoadState('domcontentloaded');
+});
+test.afterEach(async ({}, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  console.log('E2E URL', page.url());
+  console.log('E2E CONSOLE', JSON.stringify(consoleErrors.slice(0, 20)));
+  console.log('E2E BODY', (await page.locator('body').innerText().catch(() => '')).slice(0, 2000));
+  console.log('E2E HTML', (await page.content().catch(() => '')).slice(0, 4000));
+});
 test.afterAll(async () => { await app?.close(); });
 
 test('creates, edits, formats and switches Writer tabs', async () => {
