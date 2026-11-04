@@ -17,12 +17,12 @@ test.beforeAll(async () => {
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.waitForLoadState('domcontentloaded');
 });
-test.afterEach(async ({}, testInfo) => {
+test.afterEach(async (_fixtures, testInfo) => {
   if (testInfo.status === testInfo.expectedStatus) return;
-  console.log('E2E URL', page.url());
-  console.log('E2E CONSOLE', JSON.stringify(consoleErrors.slice(0, 20)));
-  console.log('E2E BODY', (await page.locator('body').innerText().catch(() => '')).slice(0, 2000));
-  console.log('E2E HTML', (await page.content().catch(() => '')).slice(0, 4000));
+  process.stdout.write(`E2E URL ${page.url()}\n`);
+  process.stdout.write(`E2E CONSOLE ${JSON.stringify(consoleErrors.slice(0, 20))}\n`);
+  process.stdout.write(`E2E BODY ${(await page.locator('body').innerText().catch(() => '')).slice(0, 2000)}\n`);
+  process.stdout.write(`E2E HTML ${(await page.content().catch(() => '')).slice(0, 4000)}\n`);
 });
 test.afterAll(async () => { await app?.close(); });
 
