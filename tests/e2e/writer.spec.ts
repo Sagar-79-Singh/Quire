@@ -16,7 +16,7 @@ test.beforeAll(async () => {
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.waitForLoadState('domcontentloaded');
-  await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; window?.show(); window?.focus(); });
+  await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; window?.setBounds({ x: 0, y: 0, width: 1440, height: 940 }); window?.show(); window?.focus(); });
 });
 test.afterEach(async ({ headless: _headless }, testInfo) => {
   void _headless;
@@ -25,6 +25,14 @@ test.afterEach(async ({ headless: _headless }, testInfo) => {
   process.stdout.write(`E2E CONSOLE ${JSON.stringify(consoleErrors.slice(0, 20))}\n`);
   process.stdout.write(`E2E BODY ${(await page.locator('body').innerText().catch(() => '')).slice(0, 2000)}\n`);
   process.stdout.write(`E2E HTML ${(await page.content().catch(() => '')).slice(0, 4000)}\n`);
+  const state = await page.evaluate(() => {
+    const root = document.querySelector('#root');
+    const home = document.querySelector('.home-screen');
+    const blank = Array.from(document.querySelectorAll('button')).find((button) => button.getAttribute('aria-label') === 'Blank document');
+    const rect = (element: Element | null | undefined) => { if (!element) return null; const value = element.getBoundingClientRect(); return { x: value.x, y: value.y, width: value.width, height: value.height }; };
+    return { title: document.title, rootChildren: root?.childElementCount ?? 0, home: Boolean(home), homeRect: rect(home), blankRect: rect(blank), blankDisabled: blank instanceof HTMLButtonElement ? blank.disabled : null, bodyText: document.body.textContent?.slice(0, 1200) ?? '', innerWidth: window.innerWidth, innerHeight: window.innerHeight, devicePixelRatio: window.devicePixelRatio };
+  }).catch((error: unknown) => ({ error: String(error) }));
+  process.stdout.write(`E2E STATE ${JSON.stringify(state)}\n`);
 });
 test.afterAll(async () => { await app?.close(); });
 
