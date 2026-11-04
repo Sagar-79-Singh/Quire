@@ -17,7 +17,8 @@ test.beforeAll(async () => {
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.waitForLoadState('domcontentloaded');
 });
-test.afterEach(async (_fixtures, testInfo) => {
+test.afterEach(async ({ headless: _headless }, testInfo) => {
+  void _headless;
   if (testInfo.status === testInfo.expectedStatus) return;
   process.stdout.write(`E2E URL ${page.url()}\n`);
   process.stdout.write(`E2E CONSOLE ${JSON.stringify(consoleErrors.slice(0, 20))}\n`);
