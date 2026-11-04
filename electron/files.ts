@@ -73,7 +73,7 @@ export function createFileOperations(dependencies: FileOperationsDependencies): 
   return {
     openDocument: async (path) => {
       let selected = path;
-      if (!selected) { const result = await dialogs.open({ properties: ['openFile'], filters: docxFilter }); if (result.canceled || !result.filePaths[0]) return null; selected = result.filePaths[0]; }
+      if (!selected) { const result = await dialogs.open({ properties: ['openFile'], filters: docxFilter }); if (result.canceled || !result.filePaths[0]) return null; selected = result.filePaths[0]; remember(selected); }
       if (typeof selected !== 'string' || extname(selected).toLowerCase() !== '.docx') throw new Error(en.toast.file);
       await assertAllowed(selected);
       const size = await fs.size(selected); if (size > MAX_DOCUMENT_BYTES) throw new Error(en.toast.file);

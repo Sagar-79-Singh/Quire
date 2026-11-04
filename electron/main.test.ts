@@ -14,6 +14,7 @@ vi.mock('electron', () => ({
   BrowserWindow: { fromWebContents: vi.fn(), getAllWindows: vi.fn(() => []) },
   Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: mocks.menu }, dialog: { showErrorBox: vi.fn(), showOpenDialog: vi.fn(), showSaveDialog: vi.fn() }, ipcMain: { handle: vi.fn(), removeHandler: vi.fn() },
 }));
+vi.mock('node:url', () => ({ fileURLToPath: vi.fn((url: unknown) => String(url)) }));
 vi.mock('./window', () => ({ createMainWindow: vi.fn(() => mocks.window) }));
 vi.mock('./ipc', () => ({ registerShellIPC: vi.fn(() => mocks.unregister) }));
 describe('desktop bootstrap', () => {

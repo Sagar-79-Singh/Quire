@@ -9,7 +9,7 @@ const fsMocks = vi.hoisted(() => ({
   rename: vi.fn((_from: string, _to: string) => Promise.resolve()),
   mkdir: vi.fn((_path: string, _options: { recursive: boolean }) => Promise.resolve(undefined)),
 }));
-vi.mock('node:fs/promises', () => fsMocks);
+vi.mock('node:fs/promises', () => ({ ...fsMocks, default: fsMocks }));
 type Handler = (event: IpcMainInvokeEvent, value?: unknown) => unknown;
 const event = {} as IpcMainInvokeEvent;
 const recent = { id: 'r', title: 'Document', path: '/document.docx', appType: 'writer', templateId: 'blank', modifiedAt: 100 };

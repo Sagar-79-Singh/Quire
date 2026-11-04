@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 
 afterEach(() => {
   cleanup();
@@ -10,19 +10,11 @@ afterEach(() => {
   document.documentElement.removeAttribute('style');
 });
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+function mockMatchMedia(): void {
+  Object.defineProperty(window, 'matchMedia', { configurable: true, writable: true, value: vi.fn().mockImplementation((query: string) => ({ matches: false, media: query, onchange: null, addListener: vi.fn(), removeListener: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn() })) });
+}
+mockMatchMedia();
+beforeEach(() => { mockMatchMedia(); vi.stubGlobal('ResizeObserver', TestResizeObserver); Object.defineProperty(document, 'execCommand', { configurable: true, value: vi.fn(() => true) }); Object.defineProperty(document, 'queryCommandState', { configurable: true, value: vi.fn(() => false) }); });
 
 class TestResizeObserver implements ResizeObserver {
   observe(): void {}
@@ -30,8 +22,4 @@ class TestResizeObserver implements ResizeObserver {
   disconnect(): void {}
 }
 
-vi.stubGlobal('ResizeObserver', TestResizeObserver);
 Element.prototype.scrollIntoView = vi.fn();
-
-Object.defineProperty(document, 'execCommand', { configurable: true, value: vi.fn(() => true) });
-Object.defineProperty(document, 'queryCommandState', { configurable: true, value: vi.fn(() => false) });

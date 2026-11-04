@@ -14,7 +14,7 @@ win:
   target:
     - target: nsis
       arch: [x64]
-  icon: public/quire.svg
+  icon: build/icon.png
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -27,7 +27,7 @@ linux:
     - target: deb
       arch: [x64]
   category: Office
-  icon: public/quire.svg
+  icon: build/icon.png
   maintainer: Sagar <s07909084193@gmail.com>
 mac:
   target:
@@ -36,6 +36,6 @@ mac:
     - target: zip
       arch: [x64, arm64]
   category: public.app-category.productivity
-  icon: public/quire.svg
+  icon: build/icon.png
   identity: null
 publish: null

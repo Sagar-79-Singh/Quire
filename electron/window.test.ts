@@ -12,7 +12,7 @@ describe('main window', () => {
     const window = createMainWindow({ preloadPath: '/preload.cjs', indexPath: '/index.html', platform: 'linux', rendererUrl: 'http://localhost:5173' });
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ frame: false, webPreferences: expect.objectContaining({ sandbox: true, contextIsolation: true, nodeIntegration: false }) }));
     expect(window.loadURL).toHaveBeenCalledWith('http://localhost:5173');
-    const ready = mocks.window.once.mock.calls[0]?.[0] as unknown as () => void; ready(); expect(window.show).toHaveBeenCalled();
+    const ready = mocks.window.once.mock.calls[0]?.[1] as unknown as () => void; ready(); expect(window.show).toHaveBeenCalled();
     const deny = mocks.window.webContents.setWindowOpenHandler.mock.calls[0]?.[0] as unknown as () => unknown; expect(deny()).toEqual({ action: 'deny' });
     const navigation = mocks.window.webContents.on.mock.calls[0]?.[1] as unknown as (event: { preventDefault: () => void }) => void; const preventDefault = vi.fn(); navigation({ preventDefault }); expect(preventDefault).toHaveBeenCalled();
     const permissions = mocks.window.webContents.session.setPermissionRequestHandler.mock.calls[0]?.[2] as unknown as (allowed: boolean) => void; permissions(false);
