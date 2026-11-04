@@ -15,7 +15,7 @@ describe('Backstage', () => {
     expect(screen.getByText('Copyright © 2025 Sagar')).toBeInTheDocument();
   });
   it('disables document operations on home and dispatches real file actions', async () => {
-    const onAction = vi.fn(); const { unmount } = render(<Backstage onAction={onAction} />); for (const name of ['Save', 'Save As', 'Export PDF', 'Print', 'Close']) expect(screen.getByRole('button', { name, exact: true })).toBeDisabled();
+    const onAction = vi.fn(); const { unmount } = render(<Backstage onAction={onAction} />); for (const name of ['Save', 'Save As', 'Export PDF', 'Print', 'Close']) expect(screen.getByRole('button', { name })).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'Open', exact: true })); expect(onAction).toHaveBeenCalledWith('open'); unmount();
     useShellStore.getState().openDocument({ title: 'Report' }); render(<Backstage onAction={onAction} />); await userEvent.click(screen.getByRole('button', { name: 'Save', exact: true })); expect(onAction).toHaveBeenCalledWith('save');
   });
