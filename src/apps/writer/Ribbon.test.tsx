@@ -16,8 +16,8 @@ describe('Writer ribbon', () => {
     for (const tab of ribbonTabs) { await userEvent.click(screen.getByRole('tab', { name: tab.label })); expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-label', tab.id); const panel = screen.getByRole('tabpanel'); expect(within(panel).getAllByRole('button').length).toBeGreaterThan(0); }
   });
   it('dispatches formatting, styles and dialogs', async () => {
-    const props = mount(); await userEvent.click(screen.getAllByRole('button', { name: 'Bold', exact: true })[0]!); expect(props.onCommand).toHaveBeenCalledWith('bold');
-    await userEvent.click(screen.getAllByRole('button', { name: 'Heading 1', exact: true })[0]!); expect(props.onStyle).toHaveBeenCalledWith('h1', undefined);
+    const props = mount(); await userEvent.click(screen.getAllByRole('button', { name: 'Bold', exact: true })[0] as HTMLElement); expect(props.onCommand).toHaveBeenCalledWith('bold');
+    await userEvent.click(screen.getAllByRole('button', { name: 'Heading 1', exact: true })[0] as HTMLElement); expect(props.onStyle).toHaveBeenCalledWith('h1', undefined);
     await userEvent.click(screen.getByRole('tab', { name: 'Insert' })); await userEvent.click(screen.getByRole('button', { name: 'Insert table' })); expect(props.onDialog).toHaveBeenCalledWith('table');
   });
   it('changes page settings and view modes', async () => {
