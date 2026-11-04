@@ -17,7 +17,7 @@ describe('StatusBar', () => {
     `);
   });
   it('switches all views and opens the side panel', async () => {
-    useShellStore.getState().openDocument({ title: 'Notes', content: 'One word' }); render(<StatusBar />);
+    useShellStore.getState().openDocument({ title: 'Notes', content: 'One' }); render(<StatusBar />);
     expect(screen.getByText('1 word')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Web layout' })); expect(useShellStore.getState().viewMode).toBe('web');
     await userEvent.click(screen.getByRole('button', { name: 'Read mode' })); expect(useShellStore.getState().viewMode).toBe('read');

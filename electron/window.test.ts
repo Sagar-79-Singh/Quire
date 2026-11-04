@@ -15,7 +15,7 @@ describe('main window', () => {
     const ready = mocks.window.once.mock.calls[0]?.[1] as unknown as () => void; ready(); expect(window.show).toHaveBeenCalled();
     const deny = mocks.window.webContents.setWindowOpenHandler.mock.calls[0]?.[0] as unknown as () => unknown; expect(deny()).toEqual({ action: 'deny' });
     const navigation = mocks.window.webContents.on.mock.calls[0]?.[1] as unknown as (event: { preventDefault: () => void }) => void; const preventDefault = vi.fn(); navigation({ preventDefault }); expect(preventDefault).toHaveBeenCalled();
-    const permissions = mocks.window.webContents.session.setPermissionRequestHandler.mock.calls[0]?.[2] as unknown as (allowed: boolean) => void; permissions(false);
+    expect(mocks.window.webContents.session.setPermissionRequestHandler).toHaveBeenCalled(); const permissions = mocks.window.webContents.session.setPermissionRequestHandler.mock.lastCall?.[2] as unknown as (allowed: boolean) => void; permissions(false);
   });
   it('loads packaged files and reserves space for native controls', () => {
     createMainWindow({ preloadPath: '/preload.cjs', indexPath: '/index.html', platform: 'darwin' }); expect(mocks.window.loadFile).toHaveBeenCalledWith('/index.html'); expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 12, y: 9 } }));
