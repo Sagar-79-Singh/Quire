@@ -18,7 +18,7 @@ export async function openDocumentFile(io: ShellIO, path?: string): Promise<File
     if (file.path) useShellStore.getState().addRecent({ id, title, path: file.path, appType: 'writer', templateId: 'blank', modifiedAt: Date.now() });
     if (imported.warnings.length) return { ok: true, message: imported.warnings[0] };
     return { ok: true };
-  } catch { return { ok: false, message: en.toast.file }; }
+  } catch (error) { return { ok: false, message: error instanceof Error ? error.message : en.toast.file }; }
 }
 export async function saveDocumentFile(io: ShellIO, saveAs = false): Promise<FileOperationResult> {
   const tab = getActiveDocument(useShellStore.getState()); if (!tab) return { ok: false, message: en.common.noDocument };

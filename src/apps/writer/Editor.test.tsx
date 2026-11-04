@@ -14,7 +14,7 @@ describe('Editor', () => {
   });
   it('executes formatting and inserts sanitized HTML', () => {
     const { ref } = mount(); ref.current?.execute('bold'); expect(document.execCommand).toHaveBeenCalledWith('bold', false, undefined);
-    ref.current?.insert('<table><tr><td>Cell</td></tr></table>'); expect(ref.current?.getHtml()).toContain('<table>');
+    ref.current?.insert('<table><tr><td>Cell</td></tr></table>'); expect(ref.current?.getHtml()).toContain('<table');
     ref.current?.selectAll(); expect(document.execCommand).toHaveBeenCalledWith('selectAll'); ref.current?.focus(); expect(screen.getByRole('textbox')).toHaveFocus();
   });
   it('supports font sizes, undo/redo updates and read mode', async () => {

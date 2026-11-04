@@ -45,7 +45,9 @@ export async function exportDocx(snapshot: WriterSnapshot, title: string): Promi
       children: astToChildren(htmlToAst(snapshot.html)),
     }],
   });
-  const blob = await Packer.toBlob(doc); return blob.arrayBuffer();
+  const blob = await Packer.toBlob(doc);
+  if (typeof blob.arrayBuffer === 'function') return blob.arrayBuffer();
+  return new Promise<ArrayBuffer>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => { resolve(reader.result as ArrayBuffer); }; reader.onerror = () => { reject(reader.error ?? new Error('DOCX')); }; reader.readAsArrayBuffer(blob); });
 }
 export async function importDocx(data: ArrayBuffer): Promise<DocxImport> {
   const zip = await JSZip.loadAsync(data); let stored: { html?: string; settings?: PageSettings; title?: string } = {};

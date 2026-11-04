@@ -8,7 +8,7 @@ function io(overrides: Partial<ShellIO> = {}): ShellIO { return { isDesktop: tru
 beforeEach(() => { resetShellStore(); useWriterStore.setState({ documents: {} }); });
 describe('file operations', () => {
   it('opens a DOCX into an isolated Writer tab and records recents', async () => {
-    const adapter = io(); const result = await openDocumentFile(adapter); expect(result.ok).toBe(true); expect(result.message).toBe('Style adjusted');
+    const adapter = io(); const result = await openDocumentFile(adapter); expect(result.ok, result.message).toBe(true); expect(result.message).toBe('Style adjusted');
     const tab = useShellStore.getState().tabs[0]; expect(tab).toMatchObject({ title: 'Imported', path: '/tmp/imported.docx' }); expect(useWriterStore.getState().documents[tab?.id ?? '']?.html).toContain('Imported text'); expect(useShellStore.getState().recents).toHaveLength(1);
     await openDocumentFile(adapter); expect(useShellStore.getState().tabs).toHaveLength(1);
   });

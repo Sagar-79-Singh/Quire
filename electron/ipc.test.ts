@@ -50,7 +50,8 @@ describe('shell IPC', () => {
   });
   it('uses the default filesystem adapter without exposing arbitrary paths', async () => {
     fsMocks.readFile.mockImplementation(() => Promise.resolve('[]')); fsMocks.mkdir.mockImplementation(() => Promise.resolve(undefined)); fsMocks.writeFile.mockImplementation(() => Promise.resolve()); fsMocks.rename.mockImplementation(() => Promise.resolve());
-    register(undefined); await expect(invoke(IPC.getRecents)).resolves.toEqual([]); await invoke(IPC.setRecents, []);
+    registerShellIPC({ ipcMain, getWindow: () => available ? window : null, dataDirectory: '/data', isTrustedSender: () => trusted });
+    await expect(invoke(IPC.getRecents)).resolves.toEqual([]); await invoke(IPC.setRecents, []);
     expect(fsMocks.readFile).toHaveBeenCalledWith('/data/recents.json', 'utf8'); expect(fsMocks.mkdir).toHaveBeenCalledWith('/data', { recursive: true }); expect(fsMocks.writeFile).toHaveBeenCalledWith('/data/recents.json.tmp', '[]', 'utf8'); expect(fsMocks.rename).toHaveBeenCalled();
   });
 });

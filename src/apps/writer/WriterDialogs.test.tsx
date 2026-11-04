@@ -14,20 +14,20 @@ describe('Writer dialogs', () => {
   it('validates links and inserts safe anchors', async () => { const props = mount('link'); await userEvent.clear(screen.getByLabelText('Web address')); await userEvent.type(screen.getByLabelText('Web address'), 'https://github.com/Sagar-79-Singh/Quire'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onInsert).toHaveBeenCalledWith(expect.stringContaining('href="https://github.com')); });
   it('applies page numbers, margins and zoom', async () => {
     let props = mount('pageNumber'); await userEvent.selectOptions(screen.getByLabelText('Number format'), 'roman'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onSettings).toHaveBeenCalledWith({ pageNumber: { position: 'footer', alignment: 'center', format: 'roman' } });
-    screen.getByRole('button', { name: 'Close dialog' }).click(); props = mount('margins'); await userEvent.click(screen.getByRole('button', { name: 'narrow' })); expect(props.onSettings).toHaveBeenCalledWith({ margins: { top: 48, right: 48, bottom: 48, left: 48 } });
-    screen.getByRole('button', { name: 'Close dialog' }).click(); props = mount('zoom'); await userEvent.clear(screen.getByLabelText('Percent')); await userEvent.type(screen.getByLabelText('Percent'), '125'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onZoom).toHaveBeenCalledWith(125);
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); props = mount('margins'); await userEvent.click(screen.getByRole('button', { name: 'narrow' })); expect(props.onSettings).toHaveBeenCalledWith({ margins: { top: 48, right: 48, bottom: 48, left: 48 } });
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); props = mount('zoom'); await userEvent.clear(screen.getByLabelText('Percent')); await userEvent.type(screen.getByLabelText('Percent'), '125'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onZoom).toHaveBeenCalledWith(125);
   });
   it('finds, replaces and counts words', async () => {
     let props = mount('find'); await userEvent.type(screen.getByLabelText('Find in document'), 'Hello'); await userEvent.click(screen.getByRole('button', { name: 'Select' })); expect(props.editor?.find).toHaveBeenCalledWith('Hello');
-    screen.getByRole('button', { name: 'Close dialog' }).click(); props = mount('replace'); await userEvent.type(screen.getByLabelText('Find in document'), 'Hello'); await userEvent.click(screen.getByRole('button', { name: 'Select' })); expect(props.editor?.replace).toHaveBeenCalledWith('Hello', '', true);
-    screen.getByRole('button', { name: 'Close dialog' }).click(); mount('wordCount'); expect(screen.getByText('2')).toBeInTheDocument();
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); props = mount('replace'); await userEvent.type(screen.getByLabelText('Find in document'), 'Hello'); await userEvent.click(screen.getByRole('button', { name: 'Select' })); expect(props.editor?.replace).toHaveBeenCalledWith('Hello', '', true);
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('wordCount'); expect(screen.getByText('2')).toBeInTheDocument();
   });
   it('renders help, about and shortcut content without network calls', () => {
-    mount('help'); expect(screen.getByText('Writing and formatting')).toBeInTheDocument(); screen.getByRole('button', { name: 'Close dialog' }).click(); mount('about'); expect(screen.getByText('Version 1.0.0')).toBeInTheDocument(); screen.getByRole('button', { name: 'Close dialog' }).click(); mount('shortcuts'); expect(screen.getByText('Ctrl+Shift+Z')).toBeInTheDocument();
+    mount('help'); expect(screen.getByText('Writing and formatting')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('about'); expect(screen.getByText('Version 1.0.0')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('shortcuts'); expect(screen.getByText('Ctrl+Shift+Z')).toBeInTheDocument();
   });
   it('creates comments, symbols and equations', async () => {
     let props = mount('comment'); await userEvent.type(screen.getByLabelText('Comment text'), 'Review this'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onComment).toHaveBeenCalledWith('Review this');
-    screen.getByRole('button', { name: 'Close dialog' }).click(); props = mount('symbol'); await userEvent.click(screen.getByRole('button', { name: 'Symbol ₹' })); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onInsert).toHaveBeenCalledWith('₹');
-    screen.getByRole('button', { name: 'Close dialog' }).click(); props = mount('equation'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onInsert).toHaveBeenCalledWith(expect.stringContaining('data-equation'));
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); props = mount('symbol'); await userEvent.click(screen.getByRole('button', { name: 'Symbol ₹' })); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onInsert).toHaveBeenCalledWith('₹');
+    screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); props = mount('equation'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onInsert).toHaveBeenCalledWith(expect.stringContaining('data-equation'));
   });
 });

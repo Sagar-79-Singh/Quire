@@ -31,6 +31,9 @@ jobs:
       - name: Unit tests
         run: npm test 2>&1 | tee vitest.log
         shell: bash
+      - name: Test summary
+        if: failure()
+        run: tail -c 60000 vitest.log >> "$GITHUB_STEP_SUMMARY" || true
       - run: npm run build
       - name: Install Playwright system dependencies
         run: npx playwright install-deps
