@@ -1,4 +1,4 @@
-import type { AppType } from '../theme/tokens';
+import type { AppType } from './store';
 export interface RecentDocument { id: string; title: string; path: string; appType: AppType; templateId: string; modifiedAt: number; thumbnail?: string; }
 export const MAX_RECENTS = 20;
 export function isRecentDocument(value: unknown): value is RecentDocument {

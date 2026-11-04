@@ -1,5 +1,5 @@
-import type { RecentDocument } from './store';
-import { normalizeRecents } from './store';
+import type { RecentDocument } from './recents';
+import { normalizeRecents } from './recents';
 import type { MenuAction } from './shortcuts';
 import { en } from '../i18n/en';
 
