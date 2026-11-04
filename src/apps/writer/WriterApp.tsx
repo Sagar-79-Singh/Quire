@@ -1,9 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { en } from '../../i18n/en';
-import { RibbonButton } from '../../components/ribbon/RibbonButton';
-import { RibbonGroup } from '../../components/ribbon/RibbonGroup';
-import { RibbonTabs } from '../../components/ribbon/RibbonTabs';
-import { RibbonSurface } from '../../components/ribbon/RibbonSurface';
 import { getActiveDocument, useShellStore } from '../../shell/store';
 import { RightPanel } from '../../shell/RightPanel';
 import { useToast } from '../../components/ui/Toast';
@@ -11,33 +7,76 @@ import { Editor } from './Editor';
 import type { EditorHandle } from './Editor';
 import { Pages } from './Pages';
 import { Ruler } from './Ruler';
-import { StylesGallery } from './StylesGallery';
+import { WriterRibbon } from './Ribbon';
+import { WriterDialogs } from './WriterDialogs';
+import type { DialogKind } from './WriterDialogs';
 import { useWriterStore } from './store';
-import { defaultSettings } from './model';
+import { escapeHtml, htmlToText, shapeHtml } from './model';
+import type { PageSettings, ShapeKind } from './model';
+import { writerCommands } from './commands';
+import type { ShellIO } from '../../shell/io';
 
-export default function WriterApp() {
-  const document = useShellStore(getActiveDocument);
+export default function WriterApp({ io, onFile }: { io?: ShellIO; onFile?: (action: 'save' | 'export-pdf' | 'print') => void }) {
+  const documentTab = useShellStore(getActiveDocument);
   const view = useShellStore((state) => state.viewMode);
   const zoom = useShellStore((state) => state.zoom);
-  const mode = useShellStore((state) => state.ribbonMode);
   const ensure = useWriterStore((state) => state.ensure);
-  const writer = useWriterStore((state) => document ? state.documents[document.id] : undefined);
+  const writer = useWriterStore((state) => documentTab ? state.documents[documentTab.id] : undefined);
   const editor = useRef<EditorHandle>(null);
-  const [tab, setTab] = useState('home');
+  const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [ruler, setRuler] = useState(true);
   const [gridlines, setGridlines] = useState(false);
+  const [recipients, setRecipients] = useState<Record<string, string>[]>([]);
   const notify = useToast();
-  useEffect(() => { if (document) ensure(document.id, document.content); }, [document?.id, ensure]);
-  const applyStyle = (tag: string, className?: string): void => { editor.current?.execute('formatBlock', tag); if (className) editor.current?.execute('blockClass', className); };
-  if (!document || !writer) return null;
-  const command = (name: string, value?: string): void => { editor.current?.execute(name, value); };
-  const groups = [
-    { id: 'font', node: <RibbonGroup title={en.ribbon.font}><div className="ribbon-row"><RibbonButton icon="bold" label={en.editor.bold} hideLabel active={writer.activeFormats.includes('bold')} onClick={() => { command('bold'); }} /><RibbonButton icon="italic" label={en.editor.italic} hideLabel active={writer.activeFormats.includes('italic')} onClick={() => { command('italic'); }} /><RibbonButton icon="underline" label={en.editor.underline} hideLabel active={writer.activeFormats.includes('underline')} onClick={() => { command('underline'); }} /></div><div className="ribbon-row"><RibbonButton icon="list" label={en.editor.bullets} hideLabel onClick={() => { command('insertUnorderedList'); }} /><RibbonButton icon="align" label={en.editor.left} hideLabel onClick={() => { command('justifyLeft'); }} /></div></RibbonGroup> },
-    { id: 'styles', node: <RibbonGroup title={en.ribbon.styles}><StylesGallery compact onApply={applyStyle} /></RibbonGroup> },
-    { id: 'view', node: <RibbonGroup title={en.ribbon.view}><RibbonButton icon="expand" label="Ruler" onClick={() => { setRuler(!ruler); }} /><RibbonButton icon="grid" label="Gridlines" active={gridlines} onClick={() => { setGridlines(!gridlines); }} /></RibbonGroup> },
-  ];
+  useEffect(() => { if (documentTab) ensure(documentTab.id, documentTab.content); }, [documentTab?.id, ensure]);
+  const applyStyle = useCallback((tag: string, className?: string): void => { editor.current?.execute('formatBlock', tag); if (className) editor.current?.execute('blockClass', className); }, []);
+  const configure = useCallback((patch: Partial<PageSettings>): void => { if (documentTab) useWriterStore.getState().configure(documentTab.id, patch); }, [documentTab?.id]);
+  const insert = useCallback((html: string): void => { editor.current?.insert(html); }, []);
+  const addComment = useCallback((text: string): void => { if (documentTab) { useWriterStore.getState().addComment(documentTab.id, text); useShellStore.getState().setPanelTab('comments'); } }, [documentTab?.id]);
+  const command = useCallback((name: string, value?: string): void => {
+    if (!documentTab) return;
+    const id = documentTab.id; const state = useWriterStore.getState(); const current = state.documents[id]; if (!current) return;
+    if (name === 'undo' || name === 'redo') { state[name](id); const next = useWriterStore.getState().documents[id]; if (next) useShellStore.getState().setDocumentContent(id, htmlToText(next.html)); return; }
+    if (name === 'error') { notify(value ?? en.toast.error); return; }
+    if (name === 'insertShape') { insert(shapeHtml((value ?? 'rect') as ShapeKind)); return; }
+    if (name === 'trackChanges') { state.setTrackChanges(id, !current.trackChanges); return; }
+    if (name === 'acceptChanges' || name === 'rejectChanges') { state.resolveChanges(id, name === 'acceptChanges'); useShellStore.getState().setDocumentContent(id, htmlToText(useWriterStore.getState().documents[id]?.html ?? '')); return; }
+    if (name === 'deleteComment') { const comment = current.comments[current.comments.length - 1]; if (comment) state.deleteComment(id, comment.id); return; }
+    if (name === 'toggleMarkup') { document.querySelector('.editor-surface')?.classList.toggle('hide-markup'); return; }
+    if (name === 'nextChange' || name === 'previousChange') { const changes = Array.from(document.querySelectorAll('.editor-surface [data-change]')); const target = name === 'nextChange' ? changes[0] : changes[changes.length - 1]; target?.scrollIntoView({ block: 'center' }); return; }
+    if (name === 'toc' || name === 'bibliography' || name === 'buildIndex') {
+      const root = document.querySelector('.editor-surface');
+      const selector = name === 'toc' ? 'h1,h2,h3' : name === 'bibliography' ? '[data-citation]' : '[data-index]';
+      const entries = Array.from(root?.querySelectorAll(selector) ?? []).map((element) => element.textContent ?? '').filter(Boolean);
+      if (!entries.length) { notify(en.writer.noHeadings, 'info'); return; }
+      insert(`<section data-generated="${name}"><h2>${name === 'toc' ? en.writer.toc : name === 'bibliography' ? en.writer.bibliography : en.writer.index}</h2>${[...new Set(entries)].map((entry) => `<p>${escapeHtml(entry)}</p>`).join('')}</section><p><br></p>`); return;
+    }
+    if (name === 'formatPainter') { const selection = window.getSelection(); const node = selection?.anchorNode; const element = node instanceof Element ? node : node?.parentElement; const style = element ? getComputedStyle(element) : null; state.setPainter(id, style ? `color:${style.color};font-weight:${style.fontWeight};font-style:${style.fontStyle}` : null); notify(en.writer.painterOn, 'info'); return; }
+    if (name === 'multilevel') { editor.current?.execute('insertOrderedList'); editor.current?.execute('indent'); return; }
+    if (name === 'lineHeight') { editor.current?.execute('paragraphSpacing', JSON.stringify({ before: 0, after: current.settings.paragraphSpacing, lineHeight: Number(value) })); return; }
+    if (name === 'comment') { setDialog('comment'); return; }
+    if (name === 'createBookmark') { const title = current.selectedBlock ?? `bookmark-${Date.now()}`; editor.current?.insert(`<span id="${escapeHtml(title)}" data-bookmark="true"></span>`); notify(en.writer.added, 'info'); return; }
+    if (name === 'paste') { notify(en.toast.clipboard, 'info'); return; }
+    editor.current?.execute(name, value);
+  }, [documentTab?.id, insert, notify]);
+  useEffect(() => writerCommands.subscribe(({ name, value }) => {
+    if (['undo', 'redo'].includes(name)) command(name, value);
+    else if (['find', 'replace', 'wordCount', 'spelling', 'comment'].includes(name)) setDialog(name as DialogKind);
+    else command(name, value);
+  }), [command]);
+  const merge = useCallback((): void => {
+    const html = editor.current?.getHtml(); if (!html || !recipients.length) return;
+    for (const recipient of recipients.slice(0, 50)) {
+      const merged = html.replace(/\{\{([^}]+)\}\}/g, (_match, key: string) => escapeHtml(recipient[key.trim()] ?? ''));
+      const id = useShellStore.getState().openDocument({ title: `${documentTab?.title ?? en.common.untitled} — ${recipient.Name ?? recipient.name ?? en.writer.recipients}` });
+      useWriterStore.getState().ensure(id); useWriterStore.getState().load(id, { html: merged, settings: structuredClone(useWriterStore.getState().documents[documentTab?.id ?? '']?.settings ?? writer!.settings) });
+    }
+    notify(en.writer.merged, 'success');
+  }, [recipients, documentTab?.id, documentTab?.title, notify, writer?.settings]);
+  if (!documentTab || !writer) return null;
   return <section className="writer-app" aria-label={en.apps.writer}>
-    <div className="writer-ribbon"><div className="ribbon-tabline"><RibbonTabs label={en.ribbon.label} value={tab} onChange={setTab} items={[{ id: 'home', label: en.ribbon.home }, { id: 'view', label: en.ribbon.view }]} /><button className="ribbon-mode-button" aria-label={mode === 'compact' ? en.ribbon.expanded : en.ribbon.compact} onClick={() => { useShellStore.getState().setRibbonMode(mode === 'compact' ? 'expanded' : 'compact'); }}>{mode === 'compact' ? en.ribbon.compact : en.ribbon.expanded}</button></div><div id={`panel-${tab}`} role="tabpanel" aria-label={tab}><RibbonSurface groups={groups} expanded={mode === 'expanded'} /></div></div>
-    <div className="writer-workspace"><div className="writer-canvas-wrap">{ruler && <Ruler settings={writer.settings ?? defaultSettings} zoom={zoom} />}<div className="writer-pages-row">{ruler && <Ruler settings={writer.settings} orientation="vertical" zoom={zoom} />}<Pages settings={writer.settings} pageCount={writer.pageCount} zoom={zoom} ruler={false} gridlines={gridlines} view={view}><Editor ref={editor} documentId={document.id} onError={notify} /></Pages></div></div><RightPanel onStyle={applyStyle} /></div>
+    <WriterRibbon doc={writer} onCommand={command} onDialog={setDialog} onSettings={configure} onStyle={applyStyle} onFile={onFile ?? (() => { useShellStore.getState().setBackstageOpen(true); })} ruler={ruler} gridlines={gridlines} onRuler={() => { setRuler(!ruler); }} onGridlines={() => { setGridlines(!gridlines); }} onInsert={insert} recipients={recipients} onRecipients={setRecipients} onMerge={merge} isDesktop={io?.isDesktop ?? false} />
+    <div className="writer-workspace"><div className="writer-canvas-wrap">{ruler && <Ruler settings={writer.settings} zoom={zoom} />}<div className="writer-pages-row">{ruler && <Ruler settings={writer.settings} orientation="vertical" zoom={zoom} />}<Pages settings={writer.settings} pageCount={writer.pageCount} zoom={zoom} gridlines={gridlines} view={view}><Editor ref={editor} documentId={documentTab.id} onError={notify} /></Pages></div></div><RightPanel documentId={documentTab.id} onStyle={applyStyle} onCommand={command} /></div>
+    {dialog && <WriterDialogs kind={dialog} onClose={() => { setDialog(null); }} editor={editor.current} settings={writer.settings} onSettings={configure} onInsert={insert} onNotify={notify} onComment={addComment} onZoom={(value) => { useShellStore.getState().setZoom(value); }} zoom={zoom} html={writer.html} />}
   </section>;
 }

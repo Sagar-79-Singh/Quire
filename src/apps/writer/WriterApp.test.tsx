@@ -21,8 +21,8 @@ describe('Writer body', () => {
     expect(document.execCommand).toHaveBeenCalled();
     const normal = screen.getAllByRole('button', { name: 'Heading 1', exact: true })[0]; if (normal) await userEvent.click(normal);
     expect(document.execCommand).toHaveBeenCalledWith('formatBlock', false, 'h1');
-    await userEvent.click(screen.getByRole('button', { name: 'Gridlines' })); expect(screen.getByTestId('writer-canvas')).toHaveClass('with-gridlines');
-    await userEvent.click(screen.getByRole('button', { name: 'Ruler' })); expect(screen.queryByRole('img', { name: 'Horizontal ruler' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole('button', { name: 'Gridlines' })[0]!); expect(screen.getByTestId('writer-canvas')).toHaveClass('with-gridlines');
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ruler' })[0]!); expect(screen.queryByRole('img', { name: 'Horizontal ruler' })).not.toBeInTheDocument();
   });
   it('has no body without an active document', () => { const { container } = mount(); expect(container.querySelector('.writer-app')).not.toBeInTheDocument(); });
 });

@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
-import type { ClipboardEvent, KeyboardEvent, CSSProperties } from 'react';
+import type { ClipboardEvent, KeyboardEvent, CSSProperties, FormEvent } from 'react';
 import { useWriterStore } from './store';
-import { htmlToText, sanitizeHtml } from './model';
+import { htmlToText, sanitizeHtml, escapeHtml } from './model';
 import { paginateBlocks } from './pagination';
 import type { BlockMeasurement } from './pagination';
 import { en } from '../../i18n/en';
@@ -75,13 +75,18 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ do
     try {
       restore();
       if (commandExecutor) commandExecutor(command, value);
+      else if (command === 'blockClass') { const selection = window.getSelection(); const anchor = selection?.anchorNode; const element = anchor instanceof Element ? anchor : anchor?.parentElement; const block = element?.closest('[data-block]'); if (block instanceof HTMLElement) block.className = value ?? ''; }
+      else if (command === 'paragraphSpacing') { const values = JSON.parse(value ?? '{}') as { before: number; after: number; lineHeight: number }; const selection = window.getSelection(); const anchor = selection?.anchorNode; const element = anchor instanceof Element ? anchor : anchor?.parentElement; const block = element?.closest('[data-block]'); if (block instanceof HTMLElement) { block.style.marginTop = `${values.before}px`; block.style.marginBottom = `${values.after}px`; block.style.lineHeight = String(values.lineHeight); } }
+      else if (command === 'pageBreak') { const selection = window.getSelection(); const anchor = selection?.anchorNode; const element = anchor instanceof Element ? anchor : anchor?.parentElement; const block = element?.closest('[data-block]'); if (block instanceof HTMLElement) block.dataset.pageBreak = 'true'; else document.execCommand('insertHTML', false, '<p data-page-break="true"><br></p>'); }
+      else if (command === 'shapeFill' || command === 'shapeOutline' || command === 'shapeRotate' || command === 'shapeForward' || command === 'shapeBackward' || command === 'shapeDelete') { const state = useWriterStore.getState().documents[documentId]; const shape = root.current?.querySelector(`[data-block="${state?.selectedShape ?? ''}"]`); if (shape instanceof HTMLElement) { if (command === 'shapeFill') shape.querySelectorAll('rect,circle,path,polygon').forEach((part) => { part.setAttribute('fill', value ?? '#ffffff'); }); if (command === 'shapeOutline') shape.querySelectorAll('rect,circle,path,line,polygon').forEach((part) => { part.setAttribute('stroke', value ?? '#2B579A'); }); if (command === 'shapeRotate') shape.style.transform = `rotate(${value ?? '15'}deg)`; if (command === 'shapeForward') shape.style.zIndex = '2'; if (command === 'shapeBackward') shape.style.zIndex = '0'; if (command === 'shapeDelete') shape.remove(); } }
       else if (command === 'fontSize') {
         document.execCommand('fontSize', false, '7');
         root.current?.querySelectorAll('font[size="7"]').forEach((font) => { const span = document.createElement('span'); span.style.fontSize = `${value || 11}pt`; span.innerHTML = font.innerHTML; font.replaceWith(span); });
       } else document.execCommand(command, false, value);
+      if (useWriterStore.getState().documents[documentId]?.painter && command === 'applyPainter') { const selection = window.getSelection(); const node = selection?.anchorNode; const block = (node instanceof Element ? node : node?.parentElement)?.closest('[data-block]'); if (block instanceof HTMLElement) block.style.cssText += `;${useWriterStore.getState().documents[documentId]?.painter ?? ''}`; useWriterStore.getState().setPainter(documentId, null); }
       sync();
     } catch { onError?.(en.toast.format); }
-  }, [restore, commandExecutor, sync, onError]);
+  }, [restore, commandExecutor, sync, onError, documentId]);
   const insert = useCallback((html: string) => { execute('insertHTML', sanitizeHtml(html)); }, [execute]);
   const find = useCallback((query: string, next = true) => {
     if (!query || !root.current) return false;
@@ -102,7 +107,17 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor({ do
     },
   }), [execute, insert, find, doc?.html, remember, restore, sync]);
   const paste = (event: ClipboardEvent<HTMLDivElement>): void => { event.preventDefault(); const html = event.clipboardData.getData('text/html'); const text = event.clipboardData.getData('text/plain'); insert(html ? sanitizeHtml(html) : text.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] ?? char).replace(/\n/g, '<br>')); };
+  const beforeInput = (event: FormEvent<HTMLDivElement>): void => {
+    const state = useWriterStore.getState().documents[documentId]; const native = event.nativeEvent as InputEvent;
+    if (!state?.trackChanges || !native.inputType.startsWith('insert') && !native.inputType.startsWith('delete')) return;
+    event.preventDefault(); const id = crypto.randomUUID(); const selection = window.getSelection(); const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+    const deleted = range && !range.collapsed ? range.toString() : ''; const inserted = native.data ?? '';
+    const kind = inserted ? 'insert' : 'delete'; const content = inserted || deleted;
+    if (!content) { document.execCommand(native.inputType.startsWith('delete') ? 'delete' : 'insertText', false, ''); return; }
+    const tag = kind === 'insert' ? 'ins' : 'del'; document.execCommand('insertHTML', false, `<${tag} data-change="${id}" data-author="Sagar">${escapeHtml(content)}</${tag}>`);
+    useWriterStore.getState().addChange(documentId, kind, content); sync();
+  };
   const keydown = (event: KeyboardEvent<HTMLDivElement>): void => { if (event.key === 'Tab') { event.preventDefault(); execute(event.shiftKey ? 'outdent' : 'indent'); } };
   if (!doc) return null;
-  return <div ref={root} className="editor-surface" role="textbox" aria-label={en.editor.content} aria-multiline="true" contentEditable={!readOnly} suppressContentEditableWarning spellCheck={doc.spellcheck} data-testid="writer-editor" data-document-id={documentId} style={{ fontFamily: doc.settings.font, '--paragraph-spacing': `${doc.settings.paragraphSpacing}px`, columnCount: doc.settings.columns, columnGap: doc.settings.columnGap, hyphens: doc.settings.hyphenation ? 'auto' : 'manual' } as CSSProperties} onInput={() => { sync(); }} onKeyUp={remember} onMouseUp={remember} onFocus={remember} onPaste={paste} onKeyDown={keydown} onBlur={() => { remember(); }} />;
+  return <div ref={root} className="editor-surface" role="textbox" aria-label={en.editor.content} aria-multiline="true" contentEditable={!readOnly} suppressContentEditableWarning spellCheck={doc.spellcheck} data-testid="writer-editor" data-document-id={documentId} data-line-numbers={doc.settings.lineNumbers} style={{ fontFamily: doc.settings.font, '--paragraph-spacing': `${doc.settings.paragraphSpacing}px`, columnCount: doc.settings.columns, columnGap: doc.settings.columnGap, hyphens: doc.settings.hyphenation ? 'auto' : 'manual' } as CSSProperties} onInput={() => { sync(); }} onBeforeInput={beforeInput} onKeyUp={remember} onMouseUp={remember} onFocus={remember} onPaste={paste} onKeyDown={keydown} onBlur={() => { remember(); }} />;
 });

@@ -11,6 +11,7 @@ import { createShellIO, defaultIODependencies } from './io';
 import type { ShellIO } from './io';
 import { getActiveDocument, useShellStore } from './store';
 import { appRegistry } from './appRegistry';
+import { writerCommands } from '../apps/writer/commands';
 import { installShortcuts } from './shortcuts';
 import type { MenuAction } from './shortcuts';
 import { Icon } from '../components/ui/Icon';
@@ -41,7 +42,7 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
       case 'toggle-ribbon': state.setRibbonMode(state.ribbonMode === 'compact' ? 'expanded' : 'compact'); break;
       case 'fullscreen': void io.toggleFullscreen().catch(() => { notify(en.toast.window); }); break;
       case 'open': case 'save': case 'save-as': case 'export-pdf': case 'print': notify(en.title.filePending, 'info'); break;
-      case 'undo': case 'redo': case 'find': notify(en.title.toolsPending, 'info'); break;
+      case 'undo': case 'redo': case 'find': writerCommands.dispatch(action); break;
     }
   }, [io, notify]);
   useEffect(() => {

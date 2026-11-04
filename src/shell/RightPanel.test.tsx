@@ -8,8 +8,8 @@ describe('RightPanel', () => {
   it('switches among the three panel tabs and closes accessibly', async () => {
     render(<RightPanel />); expect(screen.getByRole('complementary', { name: 'Document side panel' })).toHaveClass('is-open');
     expect(screen.getByRole('tabpanel').className).toMatchInlineSnapshot('"panel-content"');
-    await userEvent.click(screen.getByRole('tab', { name: 'Format Shape' })); expect(useShellStore.getState().panelTab).toBe('shape'); expect(screen.getByText('Select a shape to format it.')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('tab', { name: 'Comments' })); expect(screen.getByText('A conversation starts here.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Format Shape' })); expect(useShellStore.getState().panelTab).toBe('shape'); expect(screen.getAllByText('Select a shape to format it.').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('tab', { name: 'Comments' })); expect(screen.getAllByText('A conversation starts here.').length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole('button', { name: 'Close side panel' })); expect(useShellStore.getState().panelOpen).toBe(false); expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
   });
   it('applies real paragraph styles when an editor is connected', async () => {

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { writerCommands } from '../apps/writer/commands';
+import { useWriterStore } from '../apps/writer/store';
 import { en } from '../i18n/en';
 import { Icon } from '../components/ui/Icon';
 import { Toggle } from '../components/ui/Toggle';
@@ -16,6 +18,7 @@ export const shellTools: Tool[] = [
 export function TitleBar({ io, onAction }: { io: ShellIO; onAction: (action: MenuAction) => void }) {
   const document = useShellStore(getActiveDocument);
   const autoSave = useShellStore((state) => state.autoSave);
+  const writer = useWriterStore((state) => document ? state.documents[document.id] : undefined);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState('');
   const [query, setQuery] = useState('');
@@ -40,7 +43,7 @@ export function TitleBar({ io, onAction }: { io: ShellIO; onAction: (action: Men
     }} />
       {searchOpen && <div className="tool-results" id="tool-results" role="listbox" aria-label={en.title.searchLabel}>{results.length ? results.map((tool) => <button key={tool.action} role="option" aria-selected={false} onClick={() => { onAction(tool.action); setSearchOpen(false); }}><Icon name="search" /><span>{tool.label}</span></button>) : <p role="status">{en.title.noResults}</p>}</div>}
     </div>
-    <div className="titlebar-actions no-drag"><button className="icon-button" disabled title={en.title.editorPending} aria-label={en.title.undo}><Icon name="undo" /></button><button className="icon-button" disabled title={en.title.editorPending} aria-label={en.title.redo}><Icon name="redo" /></button><button className="icon-button" disabled title={en.title.filePending} aria-label={en.title.save}><Icon name="save" /></button></div>
+    <div className="titlebar-actions no-drag"><button className="icon-button" disabled={!writer?.past.length} title={en.title.undo} aria-label={en.title.undo} onClick={() => { writerCommands.dispatch('undo'); }}><Icon name="undo" /></button><button className="icon-button" disabled={!writer?.future.length} title={en.title.redo} aria-label={en.title.redo} onClick={() => { writerCommands.dispatch('redo'); }}><Icon name="redo" /></button><button className="icon-button" disabled={!document} title={en.title.save} aria-label={en.title.save} onClick={() => { onAction('save'); }}><Icon name="save" /></button></div>
     <div className="window-controls no-drag">{([{ action: 'minimize', icon: 'minimize', label: en.nav.minimize }, { action: 'maximize', icon: 'maximize', label: en.nav.maximize }, { action: 'close', icon: 'close', label: en.nav.close }] as const).map((control) => <button key={control.action} className={`window-control window-${control.action}`} aria-label={control.label} title={io.isDesktop ? control.label : en.nav.windowUnavailable} disabled={!io.isDesktop} onClick={() => { void io.windowControl(control.action); }}><Icon name={control.icon} /></button>)}</div>
   </header>;
 }
