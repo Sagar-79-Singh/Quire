@@ -107,7 +107,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 .writer-workspace { display: flex; flex: 1; min-height: 0; }
 .writer-canvas-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .pages-scroll { flex: 1; min-height: 0; overflow: auto; background: var(--q-canvas); padding: 0 24px 24px; display: flex; flex-direction: column; align-items: center; }
-.ruler-horizontal-row { height: 20px; min-height: 20px; display: flex; justify-content: center; width: 100%; position: sticky; top: 0; z-index: 5; background: var(--q-chrome); }
+.ruler-horizontal-row { height: 20px; min-height: 20px; display: flex; justify-content: center; position: absolute; top: -44px; left: 0; z-index: 5; background: var(--q-chrome); }
 .page-stage { position: relative; flex-shrink: 0; margin-left: auto; margin-right: auto; }
 .ruler-vertical-wrap { position: absolute; left: -20px; top: 0; width: 20px; }
 .ruler { position: relative; background: var(--q-chrome); color: var(--q-secondary); overflow: hidden; flex-shrink: 0; }

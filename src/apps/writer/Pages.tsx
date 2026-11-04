@@ -33,8 +33,8 @@ export const Pages = forwardRef<HTMLDivElement, PagesProps>(function Pages({ set
     return () => { element.removeEventListener('wheel', wheel); };
   }, [onZoom, zoom]);
   return <div ref={scroll} className={`pages-scroll ${ruler ? 'with-rulers' : ''} ${gridlines ? 'with-gridlines' : ''} view-${view}`} data-testid="writer-canvas">
-    {ruler && <div className="ruler-horizontal-row" style={{ width: scaledWidth }}><Ruler settings={settings} zoom={zoom} unit={rulerUnit} indent={indent} onIndentChange={onIndentChange} /></div>}
-    <div className="page-stage" style={{ width: scaledWidth, marginTop: ruler ? 24 : 0 }}>
+    <div className="page-stage" style={{ width: scaledWidth, marginTop: ruler ? 44 : 0 }}>
+      {ruler && <div className="ruler-horizontal-row" style={{ width: scaledWidth }}><Ruler settings={settings} zoom={zoom} unit={rulerUnit} indent={indent} onIndentChange={onIndentChange} /></div>}
       {ruler && <div className="ruler-vertical-wrap"><Ruler settings={settings} orientation="vertical" zoom={zoom} unit={rulerUnit} /></div>}
       <div className="page-zoom-space" style={{ width: scaledWidth, height: scaledHeight }}>
         <div className="page-stack" style={{ width: size.width, height: totalHeight, transform: `scale(${scale})` }}>
