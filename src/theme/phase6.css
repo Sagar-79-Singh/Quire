@@ -111,7 +111,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 .page-stage { position: relative; flex-shrink: 0; margin-left: auto; margin-right: auto; }
 .ruler-vertical-wrap { position: absolute; left: -20px; top: 0; width: 20px; }
 .ruler { position: relative; background: var(--q-chrome); color: var(--q-secondary); overflow: hidden; flex-shrink: 0; }
-.ruler-horizontal { height: 20px; }
+.ruler-horizontal { height: 20px; margin-left: 0; }
 .ruler-vertical { width: 20px; }
 .ruler-track { position: absolute; inset: 0; }
 .ruler-shade { position: absolute; top: 0; bottom: 0; background: var(--q-ruler-shade); }
