@@ -69,9 +69,11 @@ export function RibbonSurface({ groups, expanded = false, measureKey = '' }: { g
     const first = popover.current?.querySelector<HTMLElement>('button, select, input, [tabindex]');
     first?.focus();
     const outside = (event: MouseEvent): void => { if (event.target instanceof Node && !popover.current?.contains(event.target) && !trigger.current?.contains(event.target)) setOpen(false); };
+    const key = (event: globalThis.KeyboardEvent): void => { if (event.key === 'Escape') { event.preventDefault(); close(); } };
     window.addEventListener('mousedown', outside);
-    return () => { window.removeEventListener('mousedown', outside); };
-  }, [open]);
+    window.addEventListener('keydown', key);
+    return () => { window.removeEventListener('mousedown', outside); window.removeEventListener('keydown', key); };
+  }, [open, close]);
 
   const trap = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === 'Escape') { event.preventDefault(); close(); return; }

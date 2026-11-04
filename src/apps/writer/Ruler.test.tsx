@@ -18,10 +18,10 @@ describe('Ruler', () => {
     const onIndentChange = vi.fn();
     render(<Ruler settings={defaultSettings} onIndentChange={onIndentChange} />);
     const marker = screen.getByRole('slider', { name: 'Left indent' });
-    fireEvent.pointerDown(marker, { clientX: 96, clientY: 0, pointerId: 1 });
-    fireEvent.pointerMove(marker, { clientX: 120, clientY: 0, pointerId: 1 });
+    fireEvent.mouseDown(marker, { clientX: 96, clientY: 0 });
+    fireEvent.mouseMove(marker, { clientX: 120, clientY: 0 });
     expect(onIndentChange).toHaveBeenCalledWith({ left: 24 });
-    fireEvent.pointerUp(marker);
+    fireEvent.mouseUp(marker);
     fireEvent.keyDown(marker, { key: 'ArrowRight' });
     expect(onIndentChange).toHaveBeenCalledWith({ left: 12 });
   });

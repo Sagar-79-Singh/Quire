@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { pageDimensions } from './model';
 import type { PageSettings } from './model';
 import { en } from '../../i18n/en';
@@ -22,17 +22,16 @@ export function Ruler({ settings, orientation = 'horizontal', zoom = 100, unit =
   const start = (horizontal ? settings.margins.left : settings.margins.top) * scale;
   const end = length - (horizontal ? settings.margins.right : settings.margins.bottom) * scale;
   const drag = useRef<{ kind: keyof ParagraphIndent; x: number; y: number; value: number } | null>(null);
-  const move = useCallback((event: PointerEvent<HTMLDivElement>) => {
+  const move = useCallback((event: MouseEvent<HTMLDivElement>) => {
     const state = drag.current;
     if (!state || !onIndentChange) return;
     const delta = (horizontal ? event.clientX - state.x : event.clientY - state.y) / scale;
     const value = Math.max(-96, Math.min(480, Math.round(state.value + delta)));
     onIndentChange({ [state.kind]: value });
   }, [horizontal, onIndentChange, scale]);
-  const startDrag = (kind: keyof ParagraphIndent) => (event: PointerEvent<HTMLDivElement>): void => {
+  const startDrag = (kind: keyof ParagraphIndent) => (event: MouseEvent<HTMLDivElement>): void => {
     if (!onIndentChange) return;
     event.preventDefault();
-    if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { kind, x: event.clientX, y: event.clientY, value: indent[kind] };
   };
   const key = (kind: keyof ParagraphIndent) => (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -44,7 +43,7 @@ export function Ruler({ settings, orientation = 'horizontal', zoom = 100, unit =
   const marker = (kind: keyof ParagraphIndent, label: string, position: number, className: string) => <div
     key={kind} role="slider" tabIndex={0} aria-label={label} aria-valuemin={-96} aria-valuemax={480} aria-valuenow={indent[kind]}
     className={`ruler-marker ${className}`} style={{ [horizontal ? 'left' : 'top']: position }}
-    onPointerDown={startDrag(kind)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onKeyDown={key(kind)}
+    onMouseDown={startDrag(kind)} onMouseMove={move} onMouseUp={() => { drag.current = null; }} onKeyDown={key(kind)}
   />;
   return <div className={`ruler ruler-${orientation}`} aria-label={horizontal ? en.editor.horizontalRuler : en.editor.verticalRuler} role="group" style={{ [horizontal ? 'width' : 'height']: length, [horizontal ? 'height' : 'width']: 20 }}>
     <div className="ruler-track">
