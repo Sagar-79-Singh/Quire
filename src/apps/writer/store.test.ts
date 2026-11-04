@@ -5,7 +5,7 @@ beforeEach(() => { store = createWriterStore(); store.getState().ensure('doc', '
 describe('writer store', () => {
   it('initializes once and keeps documents isolated', () => {
     const original = store.getState().documents.doc; store.getState().ensure('doc', 'Changed'); expect(store.getState().documents.doc).toBe(original);
-    store.getState().ensure('other'); store.getState().update('doc', '<p>Edited</p>'); expect(writerText(store.getState().documents.doc ?? original)).toBe('Edited'); expect(store.getState().documents.other?.html).toContain('<br>');
+    store.getState().ensure('other'); store.getState().update('doc', '<p>Edited</p>'); expect(writerText(store.getState().documents.doc ?? original!)).toBe('Edited'); expect(store.getState().documents.other?.html).toContain('<br>');
   });
   it('supports bounded undo and redo snapshots', () => {
     store.getState().update('doc', '<p>One</p>'); store.getState().update('doc', '<p>Two</p>'); store.getState().undo('doc'); expect(store.getState().documents.doc?.html).toBe('<p>One</p>'); store.getState().redo('doc'); expect(store.getState().documents.doc?.html).toBe('<p>Two</p>');

@@ -40,8 +40,8 @@ export async function exportDocx(snapshot: WriterSnapshot, title: string): Promi
     customProperties: [{ name: CUSTOM_PROPERTY, value: JSON.stringify({ version: 1, html: snapshot.html, settings: snapshot.settings }) }],
     sections: [{
       properties: { page: { size: { width: twips(size.width), height: twips(size.height), orientation: snapshot.settings.orientation === 'landscape' ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT }, margin: { top: twips(snapshot.settings.margins.top), right: twips(snapshot.settings.margins.right), bottom: twips(snapshot.settings.margins.bottom), left: twips(snapshot.settings.margins.left) } }, column: { count: snapshot.settings.columns, space: twips(snapshot.settings.columnGap) } },
-      headers: { default: new Header({ children: [new Paragraph({ text: snapshot.settings.header, children: snapshot.settings.pageNumber.position === 'header' ? [PageNumber.CURRENT] : undefined })] }) },
-      footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, text: snapshot.settings.footer, children: snapshot.settings.pageNumber.position === 'footer' ? [PageNumber.CURRENT] : undefined })] }) },
+      headers: { default: new Header({ children: [new Paragraph({ children: [new TextRun({ text: snapshot.settings.header }), ...(snapshot.settings.pageNumber.position === 'header' ? [new TextRun({ children: [PageNumber.CURRENT] })] : [])] })] }) },
+      footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: snapshot.settings.footer }), ...(snapshot.settings.pageNumber.position === 'footer' ? [new TextRun({ children: [PageNumber.CURRENT] })] : [])] })] }) },
       children: astToChildren(htmlToAst(snapshot.html)),
     }],
   });

@@ -28,7 +28,7 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
   const runFile = useCallback((action: 'open' | 'save' | 'save-as' | 'export-pdf' | 'print', path?: string): void => {
     const operation = action === 'open' ? openDocumentFile(io, path) : action === 'save' ? saveDocumentFile(io) : action === 'save-as' ? saveDocumentFile(io, true) : action === 'export-pdf' ? exportPdfFile(io) : printDocumentFile(io);
     void operation.then((result) => { if (result.message) notify(result.message, result.ok ? 'success' : 'error'); }).catch(() => { notify(en.toast.file); });
-  }, [io, notify, runFile]);
+  }, [io, notify]);
   const dispatch = useCallback((action: MenuAction) => {
     const state = useShellStore.getState();
     const active = getActiveDocument(state);
@@ -52,7 +52,7 @@ function Shell({ injectedIO }: { injectedIO?: ShellIO }) {
       case 'word-count': writerCommands.dispatch('wordCount'); break;
       case 'about': writerCommands.dispatch('about'); break;
     }
-  }, [io, notify]);
+  }, [io, notify, runFile]);
   useEffect(() => {
     let cancelled = false;
     void io.loadRecents().then((items) => { if (!cancelled) { useShellStore.getState().replaceRecents(items); setReady(true); } }).catch(() => { if (!cancelled) notify(en.toast.recentLoad); });

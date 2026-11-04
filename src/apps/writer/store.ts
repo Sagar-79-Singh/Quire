@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { defaultSettings, htmlToText, textToHtml } from './model';
-import type { PageSettings, ShapeKind, TrackedChange, WriterComment } from './model';
+import type { PageSettings, TrackedChange, WriterComment } from './model';
 import { sanitizeHtml } from './model';
 export interface WriterSnapshot { html: string; settings: PageSettings; }
 export interface WriterDocument extends WriterSnapshot {

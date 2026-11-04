@@ -43,9 +43,9 @@ export function pageDimensions(settings: PageSettings): { width: number; height:
 export function escapeHtml(text: string): string { return text.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char); }
 export function textToHtml(text: string): string { return text.split(/\n\n+/).map((line, index) => index === 0 && text.length > 0 ? `<h1>${escapeHtml(line)}</h1>` : `<p>${escapeHtml(line) || '<br>'}</p>`).join('') || '<p><br></p>'; }
 export function htmlToText(html: string): string {
-  return html.replace(/<br\s*\/?\s*>|<\/(?:p|div|h[1-6|li|tr|blockquote)>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\n{3,}/g, '\n\n').trim();
+  return html.replace(/<br\s*\/?\s*>|<\/(?:p|div|h[1-6]|li|tr|blockquote)>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\n{3,}/g, '\n\n').trim();
 }
-const allowedTags = new Set(['P', 'DIV', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'STRIKE', 'SUB', 'SUP', 'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'TITLE', 'SUBTITLE', 'BLOCKQUOTE', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH', 'IMG', 'A', 'HR', 'INS', 'DEL', 'FIGURE', 'FIGCAPTION', 'SVG', 'PATH', 'RECT', 'CIRCLE', 'LINE', 'POLYLINE', 'POLYGON', 'TEXT', 'SUP']);
+const allowedTags = new Set(['P', 'DIV', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'STRIKE', 'SUB', 'SUP', 'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'TITLE', 'SUBTITLE', 'BLOCKQUOTE', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH', 'IMG', 'A', 'HR', 'INS', 'DEL', 'FIGURE', 'FIGCAPTION', 'SECTION', 'SMALL', 'SVG', 'PATH', 'RECT', 'CIRCLE', 'LINE', 'POLYLINE', 'POLYGON', 'TEXT', 'SUP']);
 const allowedStyles = new Set(['color', 'background-color', 'font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'text-align', 'vertical-align', 'margin-left', 'margin-top', 'margin-bottom', 'line-height', 'width', 'height', 'max-width', 'border', 'border-collapse', 'padding', 'fill', 'stroke', 'stroke-width', 'display']);
 export function sanitizeHtml(html: string, parse: (html: string) => Document = (value) => new DOMParser().parseFromString(value, 'text/html')): string {
   const doc = parse(`<body>${html}</body>`);
@@ -57,7 +57,7 @@ export function sanitizeHtml(html: string, parse: (html: string) => Document = (
         if (attr.name.startsWith('on') || attr.name === 'srcdoc' || attr.name === 'style' && /url\s*\(|expression|javascript:/i.test(attr.value)) child.removeAttribute(attr.name);
         else if (attr.name === 'href' && !/^(https?:|mailto:|#)/i.test(attr.value)) child.removeAttribute(attr.name);
         else if (attr.name === 'src' && !/^data:image\/(png|jpeg|gif|webp);base64,/i.test(attr.value)) child.removeAttribute(attr.name);
-        else if (!['style', 'href', 'src', 'alt', 'title', 'colspan', 'rowspan', 'data-block', 'data-shape', 'data-comment', 'data-change', 'data-author', 'data-time', 'data-footnote', 'data-citation', 'contenteditable', 'viewbox', 'd', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'points', 'xmlns', 'target', 'rel'].includes(attr.name.toLowerCase())) child.removeAttribute(attr.name);
+        else if (!['style', 'href', 'src', 'alt', 'title', 'colspan', 'rowspan', 'data-block', 'data-shape', 'data-comment', 'data-change', 'data-author', 'data-time', 'data-footnote', 'data-citation', 'data-page-break', 'data-note', 'data-generated', 'data-index', 'data-equation', 'data-textbox', 'data-envelope', 'data-bookmark', 'class', 'id', 'contenteditable', 'viewbox', 'd', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'points', 'xmlns', 'target', 'rel'].includes(attr.name.toLowerCase())) child.removeAttribute(attr.name);
       }
       if (child.hasAttribute('style')) {
         const element = child as HTMLElement;

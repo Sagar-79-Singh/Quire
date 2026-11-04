@@ -6,7 +6,7 @@ import { calculateRibbonFit, RibbonSurface } from './RibbonSurface';
 const observations = new Set<ResizeObserverCallback>();
 function mockWidths(width: number) {
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(width);
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ width: 100, height: 90, top: 0, left: 0, bottom: 90, right: 100, x: 0, toJSON: () => ({}) });
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ width: 100, height: 90, top: 0, left: 0, bottom: 90, right: 100, x: 0, toJSON: () => ({}) } as DOMRect);
 }
 afterEach(() => { observations.clear(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 describe('RibbonSurface', () => {

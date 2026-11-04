@@ -5,7 +5,7 @@ import { Icon } from '../components/ui/Icon';
 import { ThemeToggle } from '../theme/ThemeProvider';
 import { useShellStore } from './store';
 import type { RecentDocument } from './store';
-import { filterTemplates, starterTemplates, templateContent } from './templates';
+import { filterTemplates, templateContent } from './templates';
 import type { StarterTemplate } from './templates';
 
 export const RECENT_ROW_HEIGHT = 72;
