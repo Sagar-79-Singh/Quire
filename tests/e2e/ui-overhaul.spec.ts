@@ -71,7 +71,7 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     const horizontal = await rect('.ruler-horizontal');
     const vertical = await rect('.ruler-vertical');
     const paper = await rect('.paper-page');
-    process.stdout.write(`RULER_RECTS ${JSON.stringify({ horizontal, vertical, paper })}\n`);
+    if (Math.abs(horizontal.x - paper.x) > 1) throw new Error(`RULER_RECTS ${JSON.stringify({ horizontal, vertical, paper })}`);
     expect(Math.abs(horizontal.x - paper.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(horizontal.right - paper.right)).toBeLessThanOrEqual(1);
     expect(horizontal.height).toBe(20);
