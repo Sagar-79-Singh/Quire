@@ -1,0 +1,5 @@
+{
+  "extends": "./config/tsconfig.json",
+  "include": ["src", "electron", "config", "tests", "*.ts"],
+  "exclude": ["node_modules", "dist", "dist-electron", "release", "coverage"]
+}
