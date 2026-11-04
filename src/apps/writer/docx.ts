@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, ImageRun, Header, Footer, PageNumber, AlignmentType, PageOrientation } from 'docx';
+import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, ImageRun, Header, Footer, PageNumber, AlignmentType, PageOrientation } from 'docx';
 import JSZip from 'jszip';
 import mammoth from 'mammoth';
 import { defaultSettings, htmlToText, pageDimensions, sanitizeHtml } from './model';
@@ -9,7 +9,7 @@ export interface DocumentAstBlock { type: 'paragraph' | 'heading' | 'table' | 'i
 export interface DocumentAst { blocks: DocumentAstBlock[]; }
 export interface DocxImport extends WriterSnapshot { title: string; warnings: string[]; }
 const CUSTOM_PROPERTY = 'quireDocument';
-export function htmlToAst(html: string, parse: (html: string) => Document = (value) => new DOMParser().parseFromString(value, 'text/html')): DocumentAst {
+export function htmlToAst(html: string, parse: (html: string) => globalThis.Document = (value) => new DOMParser().parseFromString(value, 'text/html')): DocumentAst {
   const doc = parse(`<body>${sanitizeHtml(html)}</body>`); const blocks: DocumentAstBlock[] = [];
   const alignment = (element: Element): DocumentAstBlock['align'] => { const value = (element as HTMLElement).style.textAlign; return value === 'center' || value === 'right' || value === 'justify' ? value : 'left'; };
   for (const element of Array.from(doc.body.children)) {
@@ -35,7 +35,7 @@ function astToChildren(ast: DocumentAst): (Paragraph | Table)[] {
 }
 export async function exportDocx(snapshot: WriterSnapshot, title: string): Promise<ArrayBuffer> {
   const size = pageDimensions(snapshot.settings); const twips = (px: number): number => Math.round(px * 15);
-  const doc = new Document({
+  const doc = new DocxDocument({
     creator: 'Sagar', lastModifiedBy: 'Sagar', title, description: 'Created with Quire',
     customProperties: [{ name: CUSTOM_PROPERTY, value: JSON.stringify({ version: 1, html: snapshot.html, settings: snapshot.settings }) }],
     sections: [{
