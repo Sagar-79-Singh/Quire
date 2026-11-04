@@ -16,6 +16,7 @@ test.beforeAll(async () => {
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.waitForLoadState('domcontentloaded');
+  await app.evaluate(({ BrowserWindow }) => { const window = BrowserWindow.getAllWindows()[0]; window?.show(); window?.focus(); });
 });
 test.afterEach(async ({ headless: _headless }, testInfo) => {
   void _headless;
@@ -28,6 +29,7 @@ test.afterEach(async ({ headless: _headless }, testInfo) => {
 test.afterAll(async () => { await app?.close(); });
 
 test('creates, edits, formats and switches Writer tabs', async () => {
+  await expect(page.getByRole('button', { name: 'Blank document', exact: true })).toBeVisible({ timeout: 15000 });
   await page.getByRole('button', { name: 'Blank document', exact: true }).click();
   const editor = page.getByRole('textbox', { name: 'Document content' }); await expect(editor).toBeVisible();
   await editor.click(); await page.keyboard.type('Quire offline writer'); await expect(editor).toContainText('Quire offline writer');

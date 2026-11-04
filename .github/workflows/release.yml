@@ -74,11 +74,11 @@ jobs:
         run: |
           tail -c 60000 e2e.log >> "$GITHUB_STEP_SUMMARY" || true
           if [ -f e2e.log ]; then
-            grep -n -i -E 'error|failed|timeout|expect|locator|electron|sandbox' e2e.log | head -60 | while IFS= read -r line; do
-              echo "::error title=E2E diagnostic::${line}"
+            grep -E '^E2E (URL|CONSOLE|BODY|HTML)' e2e.log | head -4 | while IFS= read -r line; do
+              echo "::error title=E2E state::${line}"
             done
-            tail -60 e2e.log | while IFS= read -r line; do
-              echo "::error title=E2E tail::${line}"
+            grep -n -i -E 'TimeoutError|Error:|expect\(' e2e.log | head -6 | while IFS= read -r line; do
+              echo "::error title=E2E failure::${line}"
             done
           fi
       - uses: actions/upload-artifact@v4
