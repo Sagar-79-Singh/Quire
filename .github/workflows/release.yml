@@ -60,7 +60,23 @@ jobs:
       - name: Install Playwright system dependencies
         run: npx playwright install-deps
       - name: End-to-end tests
-        run: xvfb-run -a npm run test:e2e
+        run: xvfb-run -a npm run test:e2e 2>&1 | tee e2e.log
+        shell: bash
+        env:
+          FORCE_COLOR: '0'
+          NO_COLOR: '1'
+      - name: End-to-end summary
+        if: failure()
+        run: |
+          tail -c 60000 e2e.log >> "$GITHUB_STEP_SUMMARY" || true
+          if [ -f e2e.log ]; then
+            grep -n -i -E 'error|failed|timeout|expect|locator|electron|sandbox' e2e.log | head -60 | while IFS= read -r line; do
+              echo "::error title=E2E diagnostic::${line}"
+            done
+            tail -60 e2e.log | while IFS= read -r line; do
+              echo "::error title=E2E tail::${line}"
+            done
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -68,6 +84,7 @@ jobs:
           path: |
             vitest.log
             build.log
+            e2e.log
             coverage/
             playwright-report/
             test-results/
