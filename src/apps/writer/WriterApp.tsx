@@ -6,7 +6,7 @@ import { useToast } from '../../components/ui/Toast';
 import { Editor } from './Editor';
 import type { EditorHandle } from './Editor';
 import { Pages } from './Pages';
-import { Ruler } from './Ruler';
+import type { ParagraphIndent, RulerUnit } from './Ruler';
 import { WriterRibbon } from './Ribbon';
 import { WriterDialogs } from './WriterDialogs';
 import type { DialogKind } from './WriterDialogs';
@@ -27,12 +27,15 @@ export default function WriterApp() {
   const [dialog, setDialog] = useState<DialogKind | null>(null);
   const [ruler, setRuler] = useState(true);
   const [gridlines, setGridlines] = useState(false);
+  const [marginGuides, setMarginGuides] = useState(true);
+  const [rulerUnit, setRulerUnit] = useState<RulerUnit>('in');
   const [recipients, setRecipients] = useState<Record<string, string>[]>([]);
   const notify = useToast();
   useEffect(() => { if (documentTab) ensure(documentTab.id, documentTab.content); }, [documentTab?.id, ensure]);
   const applyStyle = useCallback((tag: string, className?: string): void => { editor.current?.execute('formatBlock', tag); if (className) editor.current?.execute('blockClass', className); }, []);
   const configure = useCallback((patch: Partial<PageSettings>): void => { if (documentTab) useWriterStore.getState().configure(documentTab.id, patch); }, [documentTab?.id]);
   const insert = useCallback((html: string): void => { editor.current?.insert(html); }, []);
+  const changeIndent = useCallback((patch: Partial<ParagraphIndent>): void => { if (!documentTab) return; useWriterStore.getState().setIndent(documentTab.id, patch); const indent = useWriterStore.getState().documents[documentTab.id]?.indent; if (indent) editor.current?.execute('paragraphIndent', JSON.stringify(indent)); }, [documentTab?.id]);
   const addComment = useCallback((text: string): void => { if (documentTab) { useWriterStore.getState().addComment(documentTab.id, text); useShellStore.getState().setPanelTab('comments'); } }, [documentTab?.id]);
   const command = useCallback((name: string, value?: string): void => {
     if (!documentTab) return;
@@ -76,8 +79,8 @@ export default function WriterApp() {
   }, [recipients, documentTab?.id, documentTab?.title, notify, writer?.settings]);
   if (!documentTab || !writer) return null;
   return <section className="writer-app" aria-label={en.apps.writer}>
-    <WriterRibbon doc={writer} onCommand={command} onDialog={setDialog} onSettings={configure} onStyle={applyStyle} onFile={(action) => { if (context) context.dispatch(action); else useShellStore.getState().setBackstageOpen(true); }} ruler={ruler} gridlines={gridlines} onRuler={() => { setRuler(!ruler); }} onGridlines={() => { setGridlines(!gridlines); }} onInsert={insert} recipients={recipients} onRecipients={setRecipients} onMerge={merge} isDesktop={context?.io.isDesktop ?? false} />
-    <div className="writer-workspace"><div className="writer-canvas-wrap">{ruler && <Ruler settings={writer.settings} zoom={zoom} />}<div className="writer-pages-row">{ruler && <Ruler settings={writer.settings} orientation="vertical" zoom={zoom} />}<Pages settings={writer.settings} pageCount={writer.pageCount} zoom={zoom} gridlines={gridlines} view={view}><Editor ref={editor} documentId={documentTab.id} onError={notify} /></Pages></div></div><RightPanel documentId={documentTab.id} onStyle={applyStyle} onCommand={command} /></div>
+    <WriterRibbon doc={writer} onCommand={command} onDialog={setDialog} onSettings={configure} onStyle={applyStyle} onFile={(action) => { if (context) context.dispatch(action); else useShellStore.getState().setBackstageOpen(true); }} ruler={ruler} gridlines={gridlines} onRuler={() => { setRuler(!ruler); }} onGridlines={() => { setGridlines(!gridlines); }} onInsert={insert} recipients={recipients} onRecipients={setRecipients} onMerge={merge} isDesktop={context?.io.isDesktop ?? false} marginGuides={marginGuides} onMarginGuides={() => { setMarginGuides(!marginGuides); }} rulerUnit={rulerUnit} onRulerUnit={setRulerUnit} />
+    <div className="writer-workspace"><div className="writer-canvas-wrap"><Pages settings={writer.settings} pageCount={writer.pageCount} zoom={zoom} gridlines={gridlines} view={view} ruler={ruler} marginGuides={marginGuides} rulerUnit={rulerUnit} indent={writer.indent} onIndentChange={changeIndent} onZoom={(value) => { useShellStore.getState().setZoom(value); }}><Editor ref={editor} documentId={documentTab.id} onError={notify} /></Pages></div><RightPanel documentId={documentTab.id} onStyle={applyStyle} onCommand={command} /></div>
     {dialog && <WriterDialogs kind={dialog} onClose={() => { setDialog(null); }} editor={editor.current} settings={writer.settings} onSettings={configure} onInsert={insert} onNotify={notify} onComment={addComment} onZoom={(value) => { useShellStore.getState().setZoom(value); }} zoom={zoom} html={writer.html} />}
   </section>;
 }

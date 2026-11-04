@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { defaultSettings, htmlToText, textToHtml } from './model';
+import { defaultIndent } from './Ruler';
+import type { ParagraphIndent } from './Ruler';
 import type { PageSettings, TrackedChange, WriterComment } from './model';
 import { sanitizeHtml } from './model';
 export interface WriterSnapshot { html: string; settings: PageSettings; }
 export interface WriterDocument extends WriterSnapshot {
   past: WriterSnapshot[]; future: WriterSnapshot[]; comments: WriterComment[]; changes: TrackedChange[];
   trackChanges: boolean; spellcheck: boolean; selectedBlock: string | null; selectedShape: string | null;
-  pageCount: number; currentPage: number; activeFormats: string[]; painter: string | null;
+  pageCount: number; currentPage: number; activeFormats: string[]; painter: string | null; indent: ParagraphIndent;
 }
 export interface WriterState {
   documents: Record<string, WriterDocument>;
@@ -22,6 +24,7 @@ export interface WriterState {
   setPagination: (id: string, count: number, current?: number) => void;
   setFormats: (id: string, formats: string[]) => void;
   setPainter: (id: string, style: string | null) => void;
+  setIndent: (id: string, patch: Partial<ParagraphIndent>) => void;
   addComment: (id: string, text: string, now?: number) => string;
   deleteComment: (id: string, comment: string) => void;
   resolveComment: (id: string, comment: string) => void;
@@ -30,7 +33,7 @@ export interface WriterState {
   remove: (id: string) => void;
 }
 export function newWriterDocument(content = ''): WriterDocument {
-  return { html: textToHtml(content), settings: structuredClone(defaultSettings), past: [], future: [], comments: [], changes: [], trackChanges: false, spellcheck: true, selectedBlock: null, selectedShape: null, pageCount: 1, currentPage: 1, activeFormats: [], painter: null };
+  return { html: textToHtml(content), settings: structuredClone(defaultSettings), past: [], future: [], comments: [], changes: [], trackChanges: false, spellcheck: true, selectedBlock: null, selectedShape: null, pageCount: 1, currentPage: 1, activeFormats: [], painter: null, indent: { ...defaultIndent } };
 }
 const snapshot = (doc: WriterDocument): WriterSnapshot => ({ html: doc.html, settings: structuredClone(doc.settings) });
 export function createWriterStore() {
@@ -51,6 +54,7 @@ export function createWriterStore() {
       setPagination: (id, pageCount, currentPage) => { modify(id, (doc) => doc.pageCount === pageCount && (currentPage === undefined || doc.currentPage === currentPage) ? doc : ({ ...doc, pageCount, currentPage: currentPage ?? doc.currentPage })); },
       setFormats: (id, activeFormats) => { modify(id, (doc) => ({ ...doc, activeFormats })); },
       setPainter: (id, painter) => { modify(id, (doc) => ({ ...doc, painter })); },
+      setIndent: (id, indent) => { modify(id, (doc) => ({ ...doc, indent: { ...doc.indent, ...indent } })); },
       addComment: (id, text, now = Date.now()) => { const comment = crypto.randomUUID(); modify(id, (doc) => ({ ...doc, comments: [...doc.comments, { id: comment, text, author: 'Sagar', createdAt: now, resolved: false }] })); return comment; },
       deleteComment: (id, comment) => { modify(id, (doc) => ({ ...doc, comments: doc.comments.filter((item) => item.id !== comment) })); },
       resolveComment: (id, comment) => { modify(id, (doc) => ({ ...doc, comments: doc.comments.map((item) => item.id === comment ? { ...item, resolved: !item.resolved } : item) })); },

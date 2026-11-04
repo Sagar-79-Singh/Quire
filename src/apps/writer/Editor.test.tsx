@@ -29,6 +29,16 @@ describe('Editor', () => {
     const find = vi.fn(() => true); Object.defineProperty(window, 'find', { configurable: true, value: find }); const { ref } = mount(); expect(ref.current?.find('Original')).toBe(true); expect(ref.current?.find('')).toBe(false);
     expect(ref.current?.replace('Original', 'Changed')).toBe(1); expect(ref.current?.getHtml()).toContain('Changed'); expect(ref.current?.replace('missing', 'x', true)).toBe(0);
   });
+  it('applies paragraph indent, case, sort and marking commands', () => {
+    const { ref } = mount(); const editor = screen.getByRole('textbox');
+    const block = editor.querySelector('[data-block="one"]') as HTMLElement;
+    const range = document.createRange(); range.selectNodeContents(block); const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+    ref.current?.execute('paragraphIndent', JSON.stringify({ left: 24, firstLine: 12 })); expect(block.style.marginLeft).toBe('24px'); expect(block.style.textIndent).toBe('12px');
+    ref.current?.execute('changeCase', 'upper'); expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'ORIGINAL TEXT');
+    ref.current?.execute('pilcrow'); expect(editor).toHaveClass('show-pilcrow');
+    ref.current?.execute('borders', 'box'); expect(block.style.border).toContain('1px solid');
+    ref.current?.execute('shading', '#EBF1FA'); expect(block.style.backgroundColor).toBe('rgb(235, 241, 250)');
+  });
   it('reports command failures through the injected handler', () => {
     const executor = vi.fn(() => { throw new Error('unsupported'); }); const onError = vi.fn(); render(<Editor documentId="test" commandExecutor={executor} onError={onError} />); screen.getByRole('textbox').dispatchEvent(new Event('input')); const { ref } = { ref: createRef<EditorHandle>() }; render(<Editor ref={ref} documentId="test" commandExecutor={executor} onError={onError} />); ref.current?.execute('bold'); expect(onError).toHaveBeenCalled();
   });

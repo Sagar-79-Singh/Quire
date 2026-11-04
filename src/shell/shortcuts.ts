@@ -7,11 +7,13 @@ const bindings: Record<string, MenuAction> = {
 };
 export function resolveShortcut(event: ShortcutInput): MenuAction | null {
   if (event.altKey) return null;
+  if (event.key === 'F1' && (event.ctrlKey || event.metaKey) && !event.shiftKey) return 'toggle-ribbon';
   if (event.key === 'F7' && !event.ctrlKey && !event.metaKey && !event.shiftKey) return 'spelling';
   if (event.key === 'F11' && !event.ctrlKey && !event.metaKey && !event.shiftKey) return 'fullscreen';
   if (!(event.ctrlKey || event.metaKey)) return null;
   const key = event.key.toLowerCase();
   if (key === 'tab') return event.shiftKey ? 'previous-tab' : 'next-tab';
+  if (key === 'p' && event.shiftKey) return 'toggle-panel';
   if (key === 's' && event.shiftKey) return 'save-as';
   if (key === 'z' && event.shiftKey) return 'redo';
   if (event.shiftKey && (event.code === 'Equal' || event.code === 'NumpadAdd')) return 'zoom-in';
