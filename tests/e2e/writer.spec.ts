@@ -41,7 +41,7 @@ test('creates, edits, formats and switches Writer tabs', async () => {
   await page.getByRole('button', { name: 'Blank document', exact: true }).click();
   const editor = page.getByRole('textbox', { name: 'Document content' }); await expect(editor).toBeVisible();
   await editor.click(); await page.keyboard.type('Quire offline writer'); await expect(editor).toContainText('Quire offline writer');
-  await page.keyboard.press('Control+A'); await page.getByRole('tab', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: 'Bold', exact: true }).first().click();
+  await page.keyboard.press('Control+A'); await page.keyboard.press('Control+B');
   await expect(editor.locator('b, strong')).toHaveCount(1);
   await page.getByRole('button', { name: 'New document', exact: true }).last().click(); await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(2);
 });
