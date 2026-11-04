@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RightPanel } from './RightPanel';
 import { resetShellStore, useShellStore } from './store';
 beforeEach(() => { resetShellStore(); useShellStore.getState().setPanelOpen(true); });
@@ -12,8 +12,10 @@ describe('RightPanel', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Comments' })); expect(screen.getByText('A conversation starts here.')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Close side panel' })); expect(useShellStore.getState().panelOpen).toBe(false); expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
   });
-  it('really disables pending styles with tooltips', async () => {
-    render(<RightPanel />); const style = screen.getByRole('button', { name: 'Heading 1' }); expect(style).toBeDisabled(); expect(style).toHaveAttribute('title', 'Paragraph styles become available with the editor.');
-    await userEvent.click(style); expect(useShellStore.getState().panelTab).toBe('styles');
+  it('applies real paragraph styles when an editor is connected', async () => {
+    const onStyle = vi.fn(); render(<RightPanel onStyle={onStyle} />); await userEvent.click(screen.getByRole('button', { name: 'Heading 1' })); expect(onStyle).toHaveBeenCalledWith('h1', undefined);
+  });
+  it('explains why styles are unavailable without an editor', () => {
+    render(<RightPanel />); expect(screen.getByText('Paragraph styles become available with the editor.')).toBeInTheDocument();
   });
 });

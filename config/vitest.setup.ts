@@ -32,3 +32,6 @@ class TestResizeObserver implements ResizeObserver {
 
 vi.stubGlobal('ResizeObserver', TestResizeObserver);
 Element.prototype.scrollIntoView = vi.fn();
+
+Object.defineProperty(document, 'execCommand', { configurable: true, value: vi.fn(() => true) });
+Object.defineProperty(document, 'queryCommandState', { configurable: true, value: vi.fn(() => false) });
