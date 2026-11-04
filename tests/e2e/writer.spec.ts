@@ -1,6 +1,6 @@
 import { test, expect, _electron as electron } from '@playwright/test';
 import type { ElectronApplication, Page } from '@playwright/test';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { JSDOM } from 'jsdom';
@@ -54,7 +54,7 @@ test('opens a DOCX fixture and exports a PDF through native dialogs', async () =
   const pdfPath = join(dir, 'export.pdf');
   await app.evaluate(async ({ dialog }, path) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: path }); }, pdfPath);
   await page.getByRole('button', { name: 'File', exact: true }).click(); await page.getByRole('button', { name: 'Export PDF', exact: true }).click();
-  await expect.poll(async () => app.evaluate(async (_electron, path) => { const { stat } = await import('node:fs/promises'); try { return (await stat(path)).size; } catch { return 0; } }, pdfPath)).toBeGreaterThan(1000);
+  await expect.poll(async () => { try { return (await stat(pdfPath)).size; } catch { return 0; } }).toBeGreaterThan(1000);
 });
 
 test('changes theme, zoom and ribbon mode without losing content', async () => {
