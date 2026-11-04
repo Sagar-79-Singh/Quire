@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('electron', () => ({
   app: { whenReady: vi.fn().mockResolvedValue(undefined), setName: vi.fn(), getPath: vi.fn(() => '/data'), on: vi.fn((name: string, listener: () => void) => { mocks.events.set(name, listener); }), quit: vi.fn() },
   BrowserWindow: { fromWebContents: vi.fn(), getAllWindows: vi.fn(() => []) },
-  Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: mocks.menu }, ipcMain: { handle: vi.fn(), removeHandler: vi.fn() },
+  Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: mocks.menu }, dialog: { showErrorBox: vi.fn(), showOpenDialog: vi.fn(), showSaveDialog: vi.fn() }, ipcMain: { handle: vi.fn(), removeHandler: vi.fn() },
 }));
 vi.mock('./window', () => ({ createMainWindow: vi.fn(() => mocks.window) }));
 vi.mock('./ipc', () => ({ registerShellIPC: vi.fn(() => mocks.unregister) }));

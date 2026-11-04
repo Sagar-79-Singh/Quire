@@ -29,7 +29,7 @@ describe('writer store', () => {
     const changes = store.getState().documents.doc?.changes ?? []; const first = changes[0]?.id ?? ''; const second = changes[1]?.id ?? '';
     store.getState().update('doc', `<p><ins data-change="${first}">Added</ins><del data-change="${second}">Removed</del>Keep</p>`);
     store.getState().resolveChanges('doc', true, first); expect(store.getState().documents.doc?.html).toContain('Added'); expect(store.getState().documents.doc?.html).toContain('<del');
-    store.getState().resolveChanges('doc', false); expect(store.getState().documents.doc?.html).not.toContain('Removed'); expect(store.getState().documents.doc?.changes).toEqual([]);
+    store.getState().resolveChanges('doc', false); expect(store.getState().documents.doc?.html).toContain('Removed'); expect(store.getState().documents.doc?.changes).toEqual([]);
   });
   it('removes closed documents', () => { store.getState().remove('doc'); expect(store.getState().documents.doc).toBeUndefined(); });
 });

@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { WriterDialogs } from './WriterDialogs';
 import type { DialogKind, WriterDialogsProps } from './WriterDialogs';
 import { defaultSettings } from './model';
 function mount(kind: DialogKind, overrides: Partial<WriterDialogsProps> = {}) {
+  cleanup();
   const props: WriterDialogsProps = { kind, onClose: vi.fn(), editor: { execute: vi.fn(), insert: vi.fn(), focus: vi.fn(), getHtml: () => '<p>Hello</p>', selectAll: vi.fn(), find: vi.fn(() => true), replace: vi.fn(() => 2) }, settings: defaultSettings, onSettings: vi.fn(), onInsert: vi.fn(), onNotify: vi.fn(), onComment: vi.fn(), onZoom: vi.fn(), zoom: 100, html: '<p>Hello world</p>', ...overrides };
   render(<WriterDialogs {...props} />); return props;
 }

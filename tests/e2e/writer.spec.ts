@@ -3,11 +3,12 @@ import type { ElectronApplication, Page } from '@playwright/test';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { JSDOM } from 'jsdom';
 import { exportDocx } from '../../src/apps/writer/docx';
 import { defaultSettings } from '../../src/apps/writer/model';
 
 let app: ElectronApplication; let page: Page;
-test.beforeAll(async () => { app = await electron.launch({ args: ['dist-electron/main/index.js'] }); page = await app.firstWindow(); });
+test.beforeAll(async () => { globalThis.DOMParser = new JSDOM().window.DOMParser; app = await electron.launch({ args: ['dist-electron/main/index.js'] }); page = await app.firstWindow(); });
 test.afterAll(async () => { await app?.close(); });
 
 test('creates, edits, formats and switches Writer tabs', async () => {
@@ -16,7 +17,7 @@ test('creates, edits, formats and switches Writer tabs', async () => {
   await editor.click(); await page.keyboard.type('Quire offline writer'); await expect(editor).toContainText('Quire offline writer');
   await page.keyboard.press('Control+A'); await page.getByRole('tab', { name: 'Home', exact: true }).click(); await page.getByRole('button', { name: 'Bold', exact: true }).first().click();
   await expect(editor.locator('b, strong')).toHaveCount(1);
-  await page.getByRole('button', { name: 'New document', exact: true }).last().click(); await expect(page.getByRole('tab')).toHaveCount(2);
+  await page.getByRole('button', { name: 'New document', exact: true }).last().click(); await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(2);
 });
 
 test('opens a DOCX fixture and exports a PDF through native dialogs', async () => {
@@ -27,7 +28,7 @@ test('opens a DOCX fixture and exports a PDF through native dialogs', async () =
   const pdfPath = join(dir, 'export.pdf');
   await app.evaluate(async ({ dialog }, path) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: path }); }, pdfPath);
   await page.getByRole('button', { name: 'File', exact: true }).click(); await page.getByRole('button', { name: 'Export PDF', exact: true }).click();
-  await expect.poll(async () => app.evaluate(async ({ }, path) => { const { stat } = await import('node:fs/promises'); try { return (await stat(path)).size; } catch { return 0; } }, pdfPath)).toBeGreaterThan(1000);
+  await expect.poll(async () => app.evaluate(async (_electron, path) => { const { stat } = await import('node:fs/promises'); try { return (await stat(path)).size; } catch { return 0; } }, pdfPath)).toBeGreaterThan(1000);
 });
 
 test('changes theme, zoom and ribbon mode without losing content', async () => {
