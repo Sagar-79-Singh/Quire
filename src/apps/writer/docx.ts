@@ -53,10 +53,15 @@ export async function importDocx(data: ArrayBuffer): Promise<DocxImport> {
   const zip = await JSZip.loadAsync(data); let stored: { html?: string; settings?: PageSettings; title?: string } = {};
   const custom = zip.file('docProps/custom.xml');
   if (custom) { const xml = await custom.async('string'); const doc = new DOMParser().parseFromString(xml, 'application/xml'); for (const property of Array.from(doc.getElementsByTagName('property'))) { if (property.getAttribute('name') === CUSTOM_PROPERTY) { try { stored = JSON.parse(property.textContent ?? '{}') as typeof stored; } catch { stored = {}; } } } }
-  const result = await mammoth.convertToHtml({ arrayBuffer: data }, { styleMap: ["p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => h2:fresh"] });
-  const html = typeof stored.html === 'string' ? sanitizeHtml(stored.html) : sanitizeHtml(result.value || '<p><br></p>');
+  let html = typeof stored.html === 'string' ? sanitizeHtml(stored.html) : '';
+  let warnings: string[] = [];
+  if (!html) {
+    const result = await mammoth.convertToHtml({ arrayBuffer: data }, { styleMap: ["p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => h2:fresh"] });
+    html = sanitizeHtml(result.value || '<p><br></p>');
+    warnings = result.messages.map((message) => message.message);
+  }
   const settings = stored.settings && typeof stored.settings === 'object' ? { ...defaultSettings, ...stored.settings, margins: { ...defaultSettings.margins, ...stored.settings.margins } } : structuredClone(defaultSettings);
-  return { title: stored.title ?? '', html, settings, warnings: result.messages.map((message) => message.message) };
+  return { title: stored.title ?? '', html, settings, warnings };
 }
 export function buildPrintHtml(html: string, settings: PageSettings, title: string): string {
   const size = pageDimensions(settings); const safe = sanitizeHtml(html);
