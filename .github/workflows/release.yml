@@ -1,0 +1,159 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v1.0.0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Test gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Unit tests
+        run: npm test 2>&1 | tee vitest.log
+        shell: bash
+      - name: Test summary
+        if: failure()
+        run: tail -c 60000 vitest.log >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Build application
+        run: npm run build 2>&1 | tee build.log
+        shell: bash
+        env:
+          FORCE_COLOR: '0'
+          NO_COLOR: '1'
+      - name: Build summary
+        if: failure()
+        run: |
+          tail -c 60000 build.log >> "$GITHUB_STEP_SUMMARY" || true
+          if [ -f build.log ]; then
+            grep -n -i -E 'error|failed|could not|cannot|rollup|external|warn' build.log | head -40 | while IFS= read -r line; do
+              echo "::error title=Build diagnostic::${line}"
+            done
+          fi
+      - name: Build tail
+        if: failure()
+        run: |
+          if [ -f build.log ]; then
+            tail -40 build.log | while IFS= read -r line; do
+              echo "::error title=Build tail::${line}"
+            done
+          fi
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps
+      - name: Configure Electron sandbox
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      - name: End-to-end tests
+        run: xvfb-run -a -s '-screen 0 1920x1080x24' npm run test:e2e 2>&1 | tee e2e.log
+        shell: bash
+        env:
+          FORCE_COLOR: '0'
+          NO_COLOR: '1'
+      - name: End-to-end summary
+        if: failure()
+        run: |
+          tail -c 60000 e2e.log >> "$GITHUB_STEP_SUMMARY" || true
+          if [ -f e2e.log ]; then
+            grep -E '^E2E (URL|CONSOLE|BODY|HTML|STATE)' e2e.log | head -5 | while IFS= read -r line; do
+              echo "::error title=E2E state::${line}"
+            done
+            awk '/TimeoutError|Error:/{flag=1} flag{print; if(++n>=35) exit}' e2e.log | while IFS= read -r line; do
+              echo "::error title=E2E call log::${line}"
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            vitest.log
+            build.log
+            e2e.log
+            coverage/
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  build:
+    name: Build ${{ matrix.os }}
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: build:win
+          - os: ubuntu-latest
+            script: build:linux
+          - os: macos-latest
+            script: build:mac
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ${{ matrix.script }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quire-${{ matrix.os }}
+          path: |
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: quire-*
+          merge-multiple: true
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Quire v1.0.0
+          body: |
+            Quire v1.0.0 — offline desktop Writer by Sagar.
+
+            - Windows NSIS installer
+            - Linux AppImage and deb
+            - macOS DMG and ZIP (Intel and Apple Silicon)
+
+            macOS builds are unsigned. See the README for Gatekeeper instructions.
+          files: artifacts/*
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
