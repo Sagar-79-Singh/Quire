@@ -57,7 +57,7 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     const fontSize = await rect('.font-size');
     expect(family.y + family.height).toBeLessThanOrEqual(ribbon.y + 58 + 1);
     expect(fontSize.y + fontSize.height).toBeLessThanOrEqual(ribbon.y + 58 + 1);
-    const overflowing = await page.locator('.ribbon-surface').evaluate((element) => Array.from(element.querySelectorAll('*')).filter((child) => child instanceof HTMLElement && child.tagName !== 'OPTION' && child.scrollWidth > child.clientWidth + 1).map((child) => `${child.tagName}.${child.className}`));
+    const overflowing = await page.locator('.ribbon-surface').evaluate((element) => Array.from(element.querySelectorAll('*')).filter((child) => child instanceof HTMLElement && child.tagName !== 'OPTION' && !child.classList.contains('sr-only') && child.scrollWidth > child.clientWidth + 1).map((child) => `${child.tagName}.${child.className}`));
     if (overflowing.length) process.stdout.write(`RIBBOW_OVERFLOW ${JSON.stringify(overflowing)}\n`);
     expect(overflowing).toHaveLength(0);
 

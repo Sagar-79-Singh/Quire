@@ -21,15 +21,6 @@
 
 button, input, select, [tabindex] { border-radius: var(--q-radius); }
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--q-accent); outline-offset: 2px; }
-[data-tooltip] { position: relative; }
-[data-tooltip]::after {
-  content: attr(data-tooltip); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%);
-  padding: 4px 8px; border-radius: var(--q-radius); background: var(--q-text); color: var(--q-chrome);
-  font-size: 11px; line-height: 1.4; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden;
-  transition: opacity 120ms ease 400ms, visibility 0s linear 520ms; z-index: 120;
-}
-[data-tooltip]:hover::after, [data-tooltip]:focus-visible::after { opacity: 1; visibility: visible; transition-delay: 400ms, 400ms; }
-
 .title-bar { height: 32px; min-height: 32px; gap: 8px; }
 .titlebar-left { min-width: 150px; gap: 8px; }
 .titlebar-name { flex: 1; justify-content: center; min-width: 0; }
@@ -52,7 +43,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 .ribbon-pin { width: 24px; height: 24px; margin-left: auto; align-self: center; }
 .ribbon-surface { height: 90px; min-height: 90px; padding: 0 8px; display: flex; align-items: stretch; overflow: visible; position: relative; background: var(--q-chrome); }
 .ribbon-surface.is-expanded { height: 140px; min-height: 140px; }
-.ribbon-groups { display: flex; align-items: stretch; flex: 0 1 auto; min-width: 0; overflow: visible; }
+.ribbon-groups { display: flex; align-items: stretch; flex: 0 0 auto; min-width: 0; overflow: visible; }
 .ribbon-slot { flex: 0 0 auto; display: flex; }
 .ribbon-slot.is-overflowing { display: none; }
 .ribbon-group { height: 100%; min-width: 0; padding: 0 8px; display: flex; flex-direction: column; position: relative; white-space: nowrap; }
@@ -184,3 +175,5 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 .ribbon-dropdown .dropdown-trigger svg:last-child { width: 8px; height: 8px; }
 .ribbon-dropdown .dropdown-trigger { gap: 0; }
 .ribbon-dropdown .dropdown-trigger svg:first-child { width: 14px; height: 14px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
