@@ -12,7 +12,7 @@ export const rendererConfig = defineConfig({
     allowedHosts: true,
   },
   preview: { host: '0.0.0.0', allowedHosts: true },
-  build: { outDir: 'dist', emptyOutDir: true, target: 'es2022' },
+  build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', rollupOptions: { input: fileURLToPath(new URL('../index.html', import.meta.url)) } },
 });
 
 export default rendererConfig;
