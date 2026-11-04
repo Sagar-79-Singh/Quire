@@ -34,7 +34,12 @@ jobs:
       - name: Test summary
         if: failure()
         run: tail -c 60000 vitest.log >> "$GITHUB_STEP_SUMMARY" || true
-      - run: npm run build
+      - name: Build application
+        run: npm run build 2>&1 | tee build.log
+        shell: bash
+      - name: Build summary
+        if: failure()
+        run: tail -c 60000 build.log >> "$GITHUB_STEP_SUMMARY" || true
       - name: Install Playwright system dependencies
         run: npx playwright install-deps
       - name: End-to-end tests
@@ -45,6 +50,7 @@ jobs:
           name: test-results
           path: |
             vitest.log
+            build.log
             coverage/
             playwright-report/
             test-results/
