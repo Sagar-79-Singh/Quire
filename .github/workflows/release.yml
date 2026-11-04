@@ -105,7 +105,7 @@ jobs:
             script: build:win
           - os: ubuntu-latest
             script: build:linux
-          - os: macos-latest
+          - os: macos-13
             script: build:mac
     runs-on: ${{ matrix.os }}
     steps:
