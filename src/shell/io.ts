@@ -7,6 +7,7 @@ import type { FilePayload, PrintRequest, SaveRequest, SaveResult, WindowAction }
 export type { WindowAction } from './protocol';
 export interface QuireBridge {
   platform: string;
+  getSystemFonts: () => Promise<string[]>;
   getRecents: () => Promise<unknown>;
   setRecents: (documents: RecentDocument[]) => Promise<void>;
   windowControl: (action: WindowAction) => Promise<void>;

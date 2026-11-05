@@ -30,8 +30,8 @@ export const themeTokens = {
 } as const;
 
 export const dimensions = {
-  titleBar: 32, documentTabs: 32, windowControl: 46, ribbonTabs: 32, compactRibbon: 90,
-  expandedRibbon: 140, ribbonCommands: 58, ribbonLabels: 32, statusBar: 22, rightPanel: 320, ruler: 20,
+  titleBar: 32, documentTabs: 32, windowControl: 46, ribbonTabs: 32, compactRibbon: 108,
+  expandedRibbon: 140, ribbonCommands: 76, ribbonLabels: 32, statusBar: 22, rightPanel: 320, ruler: 20,
   pageGap: 24, letterWidth: 816, letterHeight: 1056, a4Width: 794, a4Height: 1123,
 } as const;
 

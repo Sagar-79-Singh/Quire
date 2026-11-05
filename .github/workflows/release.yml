@@ -59,6 +59,8 @@ jobs:
           fi
       - name: Install Playwright system dependencies
         run: npx playwright install-deps
+      - name: Install font discovery tools and test fonts
+        run: sudo apt-get update && sudo apt-get install -y fontconfig fonts-dejavu-core fonts-liberation fonts-noto-core
       - name: Configure Electron sandbox
         run: |
           sudo chown root:root node_modules/electron/dist/chrome-sandbox

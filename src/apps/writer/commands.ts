@@ -10,6 +10,16 @@ export function createCommandBus() {
 }
 export const writerCommands = createCommandBus();
 export const fontFamilies = ['Arial', 'Calibri', 'Cambria', 'Georgia', 'Helvetica', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Courier New'] as const;
+export function normalizeSystemFonts(value: unknown): string[] {
+  if (!Array.isArray(value) || value.some((font) => typeof font !== 'string')) throw new TypeError('System fonts must be an array of strings.');
+  const unique = new Map<string, string>();
+  for (const raw of value as string[]) {
+    const font = raw.trim().replace(/^"(.+)"$/, '$1').trim();
+    const key = font.toLocaleLowerCase('en-US');
+    if (font && !unique.has(key)) unique.set(key, font);
+  }
+  return Array.from(unique.values()).sort((left, right) => left.localeCompare(right, 'en', { sensitivity: 'base' }));
+}
 export const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72] as const;
 export const symbols = ['©', '®', '™', '§', '¶', '†', '‡', '•', '…', '—', '–', '€', '£', '¥', '₹', '±', '×', '÷', '≠', '≈', '≤', '≥', '∞', 'α', 'β', 'π', 'Σ', '√', '°', '←', '→', '↔'] as const;
 export function parseCsv(text: string): Record<string, string>[] {

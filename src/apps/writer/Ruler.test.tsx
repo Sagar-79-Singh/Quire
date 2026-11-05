@@ -14,6 +14,15 @@ describe('Ruler', () => {
     expect(rulerLabel(1, 'cm')).toBe('2.54');
     expect(rulerLabel(2, 'in')).toBe('2');
   });
+  it('starts the zero mark at the text-area edge and measures from that margin', () => {
+    const settings = { ...defaultSettings, margins: { ...defaultSettings.margins, left: 72, right: 120 } };
+    const { container } = render(<Ruler settings={settings} unit="cm" />);
+    const majorTicks = container.querySelectorAll('.ruler-horizontal .ruler-tick:not(.ruler-tick-minor)');
+    expect(majorTicks[0]).toHaveStyle({ left: '72px' });
+    expect(majorTicks[0]?.querySelector('small')).toHaveTextContent('0');
+    expect(majorTicks[1]).toHaveStyle({ left: '168px' });
+    expect(majorTicks[1]?.querySelector('small')).toHaveTextContent('2.54');
+  });
   it('drags indent markers into the store callback', () => {
     const onIndentChange = vi.fn();
     render(<Ruler settings={defaultSettings} onIndentChange={onIndentChange} />);

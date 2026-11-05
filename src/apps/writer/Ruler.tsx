@@ -18,6 +18,7 @@ export function Ruler({ settings, orientation = 'horizontal', zoom = 100, unit =
   const size = pageDimensions(settings);
   const horizontal = orientation === 'horizontal';
   const scale = zoom / 100;
+  const contentLength = horizontal ? size.contentWidth : size.contentHeight;
   const length = (horizontal ? size.width : size.height) * scale;
   const start = (horizontal ? settings.margins.left : settings.margins.top) * scale;
   const end = length - (horizontal ? settings.margins.right : settings.margins.bottom) * scale;
@@ -49,8 +50,8 @@ export function Ruler({ settings, orientation = 'horizontal', zoom = 100, unit =
     <div className="ruler-track">
       <span className="ruler-shade" style={{ [horizontal ? 'left' : 'top']: 0, [horizontal ? 'width' : 'height']: start }} />
       <span className="ruler-shade" style={{ [horizontal ? 'left' : 'top']: end, [horizontal ? 'width' : 'height']: length - end }} />
-      {rulerTicks(horizontal ? size.width : size.height).map((tick) => <span className="ruler-tick" key={tick} style={{ [horizontal ? 'left' : 'top']: tick * scale }}><i />{tick > 0 && <small>{rulerLabel(tick / 96, unit)}</small>}</span>)}
-      {Array.from({ length: Math.floor((horizontal ? size.width : size.height) / 24) + 1 }, (_, index) => index * 24).filter((tick) => tick % 96 !== 0).map((tick) => <span className="ruler-tick ruler-tick-minor" key={tick} style={{ [horizontal ? 'left' : 'top']: tick * scale }}><i /></span>)}
+      {rulerTicks(contentLength).map((tick) => <span className="ruler-tick" key={tick} style={{ [horizontal ? 'left' : 'top']: start + tick * scale }}><i /><small>{rulerLabel(tick / 96, unit)}</small></span>)}
+      {Array.from({ length: Math.floor(contentLength / 24) + 1 }, (_, index) => index * 24).filter((tick) => tick % 96 !== 0).map((tick) => <span className="ruler-tick ruler-tick-minor" key={tick} style={{ [horizontal ? 'left' : 'top']: start + tick * scale }}><i /></span>)}
       {horizontal && <>
         {marker('firstLine', en.ui.firstLineIndent, start + (indent.left + indent.firstLine) * scale, 'ruler-marker-first')}
         {marker('hanging', en.ui.hangingIndent, start + (indent.left + indent.hanging) * scale, 'ruler-marker-hanging')}

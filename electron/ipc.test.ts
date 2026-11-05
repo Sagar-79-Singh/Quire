@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IpcMainInvokeEvent } from 'electron';
+import * as fontList from 'font-list';
 import { registerShellIPC } from './ipc';
 import type { PersistenceFS, ShellWindow } from './ipc';
 import { IPC } from '../src/shell/protocol';
@@ -10,6 +11,7 @@ const fsMocks = vi.hoisted(() => ({
   mkdir: vi.fn((_path: string, _options: { recursive: boolean }) => Promise.resolve(undefined)),
 }));
 vi.mock('node:fs/promises', () => ({ ...fsMocks, default: fsMocks }));
+vi.mock('font-list', () => ({ getFonts: vi.fn() }));
 type Handler = (event: IpcMainInvokeEvent, value?: unknown) => unknown;
 const event = {} as IpcMainInvokeEvent;
 const recent = { id: 'r', title: 'Document', path: '/document.docx', appType: 'writer', templateId: 'blank', modifiedAt: 100 };
@@ -22,11 +24,18 @@ const ipcMain = { handle: vi.fn((channel: string, handler: Handler) => { handler
 function register(injectedFS: PersistenceFS | undefined = fs) { return registerShellIPC({ ipcMain, getWindow: () => available ? window : null, dataDirectory: '/data', isTrustedSender: () => trusted, fs: injectedFS }); }
 function invoke(channel: string, value?: unknown): unknown { const handler = handlers.get(channel); if (!handler) throw new Error('Missing handler'); return handler(event, value); }
 beforeEach(() => {
+  vi.mocked(fontList.getFonts).mockResolvedValue(['Arial', 'DejaVu Sans']);
   handlers = new Map(); trusted = true; available = true;
   window = { minimize: vi.fn(), maximize: vi.fn(), unmaximize: vi.fn(), isMaximized: vi.fn(() => false), close: vi.fn(), setFullScreen: vi.fn(), isFullScreen: vi.fn(() => false) };
   fs = { readFile: vi.fn().mockResolvedValue(JSON.stringify([recent])), writeFile: vi.fn().mockResolvedValue(undefined), rename: vi.fn().mockResolvedValue(undefined), mkdir: vi.fn().mockResolvedValue(undefined) };
 });
 describe('shell IPC', () => {
+  it('returns normalized, unique system fonts in alphabetical order', async () => {
+    vi.mocked(fontList.getFonts).mockResolvedValue(['Zulu Sans', '"Arial"', 'Arial', ' DejaVu Sans ', '']);
+    register();
+    await expect(invoke(IPC.getSystemFonts)).resolves.toEqual(['Arial', 'DejaVu Sans', 'Zulu Sans']);
+    expect(fontList.getFonts).toHaveBeenCalledWith({ disableQuoting: true });
+  });
   it('reads validated recents and writes atomically', async () => {
     const unregister = register(); await expect(invoke(IPC.getRecents)).resolves.toEqual([recent]);
     await invoke(IPC.setRecents, [recent]); expect(fs.mkdir).toHaveBeenCalledWith('/data'); expect(fs.writeFile).toHaveBeenCalledWith('/data/recents.json.tmp', JSON.stringify([recent])); expect(fs.rename).toHaveBeenCalledWith('/data/recents.json.tmp', '/data/recents.json');
@@ -38,7 +47,7 @@ describe('shell IPC', () => {
     vi.mocked(fs.readFile).mockRejectedValue(new Error('Denied')); await expect(invoke(IPC.getRecents)).rejects.toThrow('Denied');
   });
   it('guards sender identity, window lifetime and payload shape', async () => {
-    register(); trusted = false; expect(() => invoke(IPC.windowControl, 'close')).toThrow();
+    register(); trusted = false; expect(() => invoke(IPC.windowControl, 'close')).toThrow(); await expect(invoke(IPC.getSystemFonts)).rejects.toThrow();
     trusted = true; available = false; expect(() => invoke(IPC.fullscreen)).toThrow(); available = true;
     expect(() => invoke(IPC.windowControl, 'delete-files')).toThrow(); await expect(invoke(IPC.setRecents, {})).rejects.toThrow(); await expect(invoke(IPC.setRecents, Array(1001))).rejects.toThrow();
   });

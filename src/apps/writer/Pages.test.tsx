@@ -19,6 +19,20 @@ describe('Pages', () => {
     fireEvent.wheel(screen.getByTestId('writer-canvas'), { ctrlKey: true, deltaY: 100 });
     expect(onZoom).toHaveBeenCalledWith(90);
   });
+  it('anchors the ruler row and vertical ruler to the same scaled page stage', () => {
+    const { container } = render(<Pages settings={defaultSettings} pageCount={1} zoom={75} ruler><span>Content</span></Pages>);
+    const stage = container.querySelector('.page-stage');
+    const horizontalRow = container.querySelector('.ruler-horizontal-row');
+    const horizontalRuler = container.querySelector('.ruler-horizontal');
+    const verticalWrap = container.querySelector('.ruler-vertical-wrap');
+    const pageSpace = container.querySelector('.page-zoom-space');
+    expect(stage).toHaveStyle({ width: '612px' });
+    expect(horizontalRow?.parentElement).toBe(stage);
+    expect(horizontalRow).toHaveStyle({ width: '612px' });
+    expect(horizontalRuler).toHaveStyle({ width: '612px' });
+    expect(verticalWrap).toHaveStyle({ left: '-20px', top: '44px' });
+    expect(stage?.lastElementChild).toBe(pageSpace);
+  });
   it('can hide margin guides', () => {
     const { container } = render(<Pages settings={defaultSettings} pageCount={1} zoom={100} marginGuides={false}><p>Content</p></Pages>);
     expect(container.querySelector('.crop-marks')).not.toBeInTheDocument();

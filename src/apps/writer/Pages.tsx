@@ -33,9 +33,9 @@ export const Pages = forwardRef<HTMLDivElement, PagesProps>(function Pages({ set
     return () => { element.removeEventListener('wheel', wheel); };
   }, [onZoom, zoom]);
   return <div ref={scroll} className={`pages-scroll ${ruler ? 'with-rulers' : ''} ${gridlines ? 'with-gridlines' : ''} view-${view}`} data-testid="writer-canvas">
-    <div className="page-stage" style={{ width: scaledWidth, marginTop: ruler ? 44 : 0 }}>
+    <div className="page-stage" style={{ width: scaledWidth }}>
       {ruler && <div className="ruler-horizontal-row" style={{ width: scaledWidth }}><Ruler settings={settings} zoom={zoom} unit={rulerUnit} indent={indent} onIndentChange={onIndentChange} /></div>}
-      {ruler && <div className="ruler-vertical-wrap"><Ruler settings={settings} orientation="vertical" zoom={zoom} unit={rulerUnit} /></div>}
+      {ruler && <div className="ruler-vertical-wrap" style={{ left: -20, top: 44 }}><Ruler settings={settings} orientation="vertical" zoom={zoom} unit={rulerUnit} /></div>}
       <div className="page-zoom-space" style={{ width: scaledWidth, height: scaledHeight }}>
         <div className="page-stack" style={{ width: size.width, height: totalHeight, transform: `scale(${scale})` }}>
           {Array.from({ length: pageCount }, (_, index) => <div key={index} className="paper-page" data-page={index + 1} style={{ top: index * (size.height + gap), width: size.width, height: size.height, backgroundColor: settings.background || undefined }}>

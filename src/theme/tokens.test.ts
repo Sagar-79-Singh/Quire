@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { appAccents, applyTheme, contrastPairs, contrastRatio, dimensions, themeTokens, themeVariables } from './tokens';
 describe('theme tokens', () => {
   it('defines exact chrome dimensions and app accents', () => {
-    expect(dimensions).toMatchObject({ titleBar: 32, statusBar: 22, compactRibbon: 90, expandedRibbon: 140, rightPanel: 320, a4Width: 794, a4Height: 1123 });
+    expect(dimensions).toMatchObject({ titleBar: 32, statusBar: 22, compactRibbon: 108, expandedRibbon: 140, ribbonCommands: 76, ribbonLabels: 32, rightPanel: 320, a4Width: 794, a4Height: 1123 });
     expect(appAccents).toEqual({ writer: '#2B579A', sheets: '#217346', slides: '#C43E1C' });
     expect(themeTokens.light.canvas).toBe('#F3F2F1'); expect(themeTokens.dark.page).toBe('#2B2B2B');
   });

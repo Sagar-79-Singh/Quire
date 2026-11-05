@@ -44,7 +44,7 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     expect(title.height).toBe(32);
     expect(tabs.height).toBe(32);
     expect(ribbonTabs.height).toBe(32);
-    expect(ribbon.height).toBe(90);
+    expect(ribbon.height).toBe(108);
     expect(status.height).toBe(22);
     expect(Math.abs(tabs.y - title.bottom)).toBeLessThanOrEqual(2);
     expect(Math.abs(ribbonTabs.y - tabs.bottom)).toBeLessThanOrEqual(2);
@@ -55,8 +55,8 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     for (const button of small) { expect(button.width).toBeLessThanOrEqual(24); expect(button.height).toBeLessThanOrEqual(24); }
     const family = await rect('.font-family');
     const fontSize = await rect('.font-size');
-    expect(family.y + family.height).toBeLessThanOrEqual(ribbon.y + 58 + 1);
-    expect(fontSize.y + fontSize.height).toBeLessThanOrEqual(ribbon.y + 58 + 1);
+    expect(family.y + family.height).toBeLessThanOrEqual(ribbon.y + 76 + 1);
+    expect(fontSize.y + fontSize.height).toBeLessThanOrEqual(ribbon.y + 76 + 1);
     const overflowing = await page.locator('.ribbon-surface').evaluate((element) => Array.from(element.querySelectorAll('*')).filter((child) => child instanceof HTMLElement && child.tagName !== 'OPTION' && !child.classList.contains('sr-only') && child.scrollWidth > child.clientWidth + 1).map((child) => `${child.tagName}.${child.className}`));
     if (overflowing.length) process.stdout.write(`RIBBOW_OVERFLOW ${JSON.stringify(overflowing)}\n`);
     expect(overflowing).toHaveLength(0);
@@ -115,7 +115,7 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     await expect(page.locator('.ribbon-surface')).toHaveClass(/is-expanded/);
     await expect.poll(async () => (await rect('.ribbon-surface')).height).toBe(140);
     await page.keyboard.press('Control+F1');
-    await expect.poll(async () => (await rect('.ribbon-surface')).height).toBe(90);
+    await expect.poll(async () => (await rect('.ribbon-surface')).height).toBe(108);
 
     await page.getByRole('combobox', { name: 'Search for tools and actions' }).fill('Dark theme');
     await page.keyboard.press('ArrowDown');

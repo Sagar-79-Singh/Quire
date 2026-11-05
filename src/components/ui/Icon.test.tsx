@@ -7,6 +7,8 @@ describe('Icon', () => {
     const { container, rerender } = render(<Icon name="writer" size={32} />);
     expect(container.querySelector('svg')).toHaveAttribute('width', '32');
     expect(container.querySelector('svg')).toHaveAttribute('stroke-width', '1.5');
+    expect(container.querySelector('svg')).toHaveAttribute('stroke', 'currentColor');
+    expect(container.querySelector('svg')).toHaveStyle({ color: 'inherit', fill: 'none', stroke: 'currentColor' });
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
     rerender(<Icon name="home" />); expect(container.querySelector('svg')).toHaveAttribute('width', '16');
     expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 24 24');

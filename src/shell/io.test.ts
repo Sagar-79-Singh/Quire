@@ -29,7 +29,7 @@ describe('shell IO', () => {
   });
   it('uses only the typed desktop bridge', async () => {
     const unsubscribe = vi.fn();
-    const bridge: QuireBridge = { platform: 'linux', getRecents: vi.fn().mockResolvedValue([recent]), setRecents: vi.fn().mockResolvedValue(undefined), windowControl: vi.fn().mockResolvedValue(undefined), toggleFullscreen: vi.fn().mockResolvedValue(undefined), onMenuAction: vi.fn().mockReturnValue(unsubscribe), openDocument: vi.fn().mockResolvedValue(null), saveDocument: vi.fn().mockResolvedValue(null), exportPdf: vi.fn().mockResolvedValue(null), printDocument: vi.fn().mockResolvedValue(undefined) };
+    const bridge: QuireBridge = { platform: 'linux', getSystemFonts: vi.fn().mockResolvedValue(['Arial']), getRecents: vi.fn().mockResolvedValue([recent]), setRecents: vi.fn().mockResolvedValue(undefined), windowControl: vi.fn().mockResolvedValue(undefined), toggleFullscreen: vi.fn().mockResolvedValue(undefined), onMenuAction: vi.fn().mockReturnValue(unsubscribe), openDocument: vi.fn().mockResolvedValue(null), saveDocument: vi.fn().mockResolvedValue(null), exportPdf: vi.fn().mockResolvedValue(null), printDocument: vi.fn().mockResolvedValue(undefined) };
     const { io } = setup(bridge);
     expect(io.isDesktop).toBe(true); expect(io.platform).toBe('linux');
     await expect(io.loadRecents()).resolves.toEqual([recent]);
@@ -41,7 +41,7 @@ describe('shell IO', () => {
   });
   it('contains bridge failures and displays a toast', async () => {
     const error = new Error('IPC failure');
-    const bridge: QuireBridge = { platform: 'linux', getRecents: vi.fn().mockRejectedValue(error), setRecents: vi.fn().mockRejectedValue(error), windowControl: vi.fn().mockRejectedValue(error), toggleFullscreen: vi.fn().mockRejectedValue(error), onMenuAction: () => { throw error; }, openDocument: vi.fn().mockRejectedValue(error), saveDocument: vi.fn().mockRejectedValue(error), exportPdf: vi.fn().mockRejectedValue(error), printDocument: vi.fn().mockRejectedValue(error) };
+    const bridge: QuireBridge = { platform: 'linux', getSystemFonts: vi.fn().mockResolvedValue(['Arial']), getRecents: vi.fn().mockRejectedValue(error), setRecents: vi.fn().mockRejectedValue(error), windowControl: vi.fn().mockRejectedValue(error), toggleFullscreen: vi.fn().mockRejectedValue(error), onMenuAction: () => { throw error; }, openDocument: vi.fn().mockRejectedValue(error), saveDocument: vi.fn().mockRejectedValue(error), exportPdf: vi.fn().mockRejectedValue(error), printDocument: vi.fn().mockRejectedValue(error) };
     const { io, onError } = setup(bridge);
     await expect(io.loadRecents()).resolves.toEqual([]);
     await expect(io.saveRecents([])).resolves.toBe(false);

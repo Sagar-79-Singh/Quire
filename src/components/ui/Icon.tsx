@@ -97,5 +97,5 @@ export const iconMap: Record<IconName, ReactNode> = Object.fromEntries(
 ) as unknown as Record<IconName, ReactNode>;
 export interface IconProps { name: IconName; size?: 16 | 20 | 24 | 32; className?: string; }
 export function Icon({ name, size = 16, className = '' }: IconProps) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={`q-icon ${className}`}>{iconMap[name]}</svg>;
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={`q-icon ${className}`} style={{ color: 'inherit', fill: 'none', stroke: 'currentColor' }}>{iconMap[name]}</svg>;
 }

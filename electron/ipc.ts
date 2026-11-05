@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { IpcMain, IpcMainInvokeEvent } from 'electron';
+import * as fontList from 'font-list';
 import { normalizeRecents } from '../src/shell/recents';
 import type { RecentDocument } from '../src/shell/recents';
 import type { WindowAction } from '../src/shell/protocol';
@@ -46,6 +47,17 @@ export function registerShellIPC(dependencies: IPCDependencies): () => void {
     if (!window) throw new Error(en.toast.window);
     return window;
   };
+  ipcMain.handle(IPC.getSystemFonts, async (event): Promise<string[]> => {
+    guard(event);
+    const fonts = await fontList.getFonts({ disableQuoting: true });
+    const unique = new Map<string, string>();
+    for (const raw of fonts) {
+      const font = raw.trim().replace(/^"(.+)"$/, '$1').trim();
+      const key = font.toLocaleLowerCase('en-US');
+      if (font && !unique.has(key)) unique.set(key, font);
+    }
+    return Array.from(unique.values()).sort((left, right) => left.localeCompare(right, 'en', { sensitivity: 'base' }));
+  });
   ipcMain.handle(IPC.getRecents, async (event): Promise<RecentDocument[]> => {
     guard(event);
     try { const parsed: unknown = JSON.parse(await fs.readFile(path)); return Array.isArray(parsed) ? normalizeRecents(parsed) : []; }

@@ -1,4 +1,5 @@
 export const IPC = {
+  getSystemFonts: 'quire:get-system-fonts',
   getRecents: 'quire:get-recents',
   setRecents: 'quire:set-recents',
   windowControl: 'quire:window-control',

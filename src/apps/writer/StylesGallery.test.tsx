@@ -13,7 +13,8 @@ describe('StylesGallery', () => {
     const onApply = vi.fn(); const onExpand = vi.fn();
     const { container } = render(<StylesGallery onApply={onApply} compact onExpand={onExpand} />);
     expect(container.querySelector('.styles-gallery')?.className).toBe('styles-gallery compact');
-    expect(screen.getByRole('button', { name: 'Normal' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('title', 'Normal');
+    expect(container.querySelectorAll('.styles-gallery.compact .style-preview')).toHaveLength(3);
     expect(screen.queryByRole('button', { name: 'Heading 3' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Next styles' }));
     expect(screen.getByRole('button', { name: 'Heading 3' })).toBeInTheDocument();

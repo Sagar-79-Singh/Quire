@@ -7,6 +7,7 @@ import { IPC } from '../src/shell/protocol';
 export function createBridge(renderer: Pick<typeof ipcRenderer, 'invoke' | 'on' | 'removeListener'>, platform: string): QuireBridge {
   return {
     platform,
+    getSystemFonts: () => renderer.invoke(IPC.getSystemFonts) as Promise<string[]>,
     getRecents: () => renderer.invoke(IPC.getRecents),
     setRecents: (documents) => renderer.invoke(IPC.setRecents, documents),
     windowControl: (action) => renderer.invoke(IPC.windowControl, action),
