@@ -104,7 +104,7 @@ test('keeps system fonts, rulers and ribbon groups aligned', async () => {
   const fontRows = fontGroup.locator('[data-ribbon-row]');
   await expect(fontRows).toHaveCount(2);
   const familyBox = await requiredBox(fontTrigger);
-  const sizeTrigger = page.getByRole('button', { name: 'Font size' });
+  const sizeTrigger = page.getByTestId('font-size-trigger');
   const sizeBox = await requiredBox(sizeTrigger);
   expect(familyBox.width).toBe(130);
   expect(familyBox.height).toBe(22);
