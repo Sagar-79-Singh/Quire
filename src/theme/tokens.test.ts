@@ -12,6 +12,7 @@ describe('theme tokens', () => {
     expect(element.dataset.theme).toBe('dark'); expect(element.style.colorScheme).toBe('dark');
     expect(element.style.getPropertyValue('--q-accent')).toBe(themeTokens.dark.accent);
     expect(themeVariables('light')['--q-chrome']).toBe('#FFFFFF');
+    expect(themeVariables('dark')).toMatchObject({ '--color-border': themeTokens.dark.border, '--color-bg-popover': themeTokens.dark.surface, '--color-bg-hover': themeTokens.dark.hover, '--color-accent-bg': themeTokens.dark['accent-soft'], '--color-accent-text': themeTokens.dark.accent });
     applyTheme(element, 'light'); expect(element.style.getPropertyValue('--q-page')).toBe('#FFFFFF');
   });
   it.each(['light', 'dark'] as const)('keeps %s text/background pairs at WCAG AA contrast', (theme) => {

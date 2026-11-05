@@ -71,7 +71,15 @@ export function contrastRatio(foreground: string, background: string): number {
 }
 
 export function themeVariables(theme: ResolvedTheme): Record<string, string> {
-  return Object.fromEntries(Object.entries(themeTokens[theme]).map(([key, value]) => [`--q-${key}`, value]));
+  const tokens = themeTokens[theme];
+  return {
+    ...Object.fromEntries(Object.entries(tokens).map(([key, value]) => [`--q-${key}`, value])),
+    '--color-border': tokens.border,
+    '--color-bg-popover': tokens.surface,
+    '--color-bg-hover': tokens.hover,
+    '--color-accent-bg': tokens['accent-soft'],
+    '--color-accent-text': tokens.accent,
+  };
 }
 
 export function applyTheme(element: HTMLElement, theme: ResolvedTheme): void {

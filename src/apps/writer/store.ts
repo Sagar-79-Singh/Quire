@@ -1,9 +1,55 @@
 import { create } from 'zustand';
+import { fontFamilies } from './commands';
 import { defaultSettings, htmlToText, textToHtml } from './model';
 import { defaultIndent } from './Ruler';
 import type { ParagraphIndent } from './Ruler';
 import type { PageSettings, TrackedChange, WriterComment } from './model';
 import { sanitizeHtml } from './model';
+
+export const themeFontFamilies = ['Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Segoe UI', 'Aptos', 'Georgia', 'Verdana'] as const;
+const knownGoodFontFamilies = [...themeFontFamilies, ...fontFamilies, 'DejaVu Sans', 'DejaVu Serif', 'DejaVu Sans Mono', 'Liberation Sans', 'Liberation Serif', 'Liberation Mono', 'Noto Sans', 'Noto Serif', 'Noto Sans Mono', 'Ubuntu', 'Roboto', 'Lato', 'Source Sans 3', 'Source Serif 4', 'Carlito', 'Arimo', 'Tinos', 'Comic Sans MS', 'Palatino Linotype', 'Garamond', 'Book Antiqua'];
+const knownGoodFontByKey = new Map<string, string>(knownGoodFontFamilies.map((font) => [font.toLocaleLowerCase('en-US'), font] as const));
+const themeFontKeys = new Set(themeFontFamilies.map((font) => font.toLocaleLowerCase('en-US')));
+const excludedFontFragments = ['glyph', 'icon', 'symbol', 'emoji', 'ui', 'web', 'noto sans math', 'lastresort'];
+
+export interface WriterFontGroup { kind: 'theme' | 'all'; fonts: string[]; }
+
+export function filterSystemFonts(fonts: readonly string[]): string[] {
+  const unique = new Map<string, string>();
+  for (const raw of fonts) {
+    const font = raw.trim().replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1').trim();
+    const key = font.toLocaleLowerCase('en-US');
+    if (!font || unique.has(key) || /^\d/.test(font)) continue;
+    const isThemeFont = themeFontKeys.has(key);
+    if (!isThemeFont && excludedFontFragments.some((fragment) => key.includes(fragment))) continue;
+    const knownGoodFont = knownGoodFontByKey.get(key);
+    const isAllCaps = font === font.toLocaleUpperCase('en-US') && /[A-Z]/.test(font);
+    if (!knownGoodFont && isAllCaps) continue;
+    unique.set(key, knownGoodFont ?? font);
+  }
+  const themeFonts = themeFontFamilies.flatMap((font) => {
+    const actual = unique.get(font.toLocaleLowerCase('en-US'));
+    return actual ? [actual] : [];
+  });
+  const themeKeys = new Set(themeFontFamilies.map((font) => font.toLocaleLowerCase('en-US')));
+  const remaining = Array.from(unique.entries())
+    .filter(([key]) => !themeKeys.has(key))
+    .map(([, font]) => font)
+    .sort((left, right) => left.localeCompare(right, 'en', { sensitivity: 'base' }));
+  return [...themeFonts, ...remaining];
+}
+
+export function groupSystemFonts(fonts: readonly string[]): WriterFontGroup[] {
+  const present = new Set(fonts.map((font) => font.toLocaleLowerCase('en-US')));
+  const featured = themeFontFamilies.filter((font) => present.has(font.toLocaleLowerCase('en-US'))).slice(0, 3);
+  const featuredKeys = new Set(featured.map((font) => font.toLocaleLowerCase('en-US')));
+  const allFonts = fonts.filter((font) => !featuredKeys.has(font.toLocaleLowerCase('en-US')));
+  return [
+    { kind: 'theme', fonts: featured.map((font) => fonts.find((item) => item.toLocaleLowerCase('en-US') === font.toLocaleLowerCase('en-US')) ?? font) },
+    { kind: 'all', fonts: allFonts.slice() },
+  ];
+}
+
 export interface WriterSnapshot { html: string; settings: PageSettings; }
 export interface WriterDocument extends WriterSnapshot {
   past: WriterSnapshot[]; future: WriterSnapshot[]; comments: WriterComment[]; changes: TrackedChange[];

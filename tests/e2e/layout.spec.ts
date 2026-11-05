@@ -45,11 +45,26 @@ test.afterAll(async () => { await app?.close(); });
 test('keeps system fonts, rulers and ribbon groups aligned', async () => {
   await openBlankDocument();
 
-  const fontSelect = page.getByRole('combobox', { name: 'Font family' });
-  await expect.poll(async () => fontSelect.locator('option').count()).toBeGreaterThanOrEqual(20);
-  await fontSelect.click();
-  await expect(fontSelect).toBeFocused();
-  expect(await fontSelect.evaluate((element) => getComputedStyle(element).maxHeight)).toBe('300px');
+  const fontTrigger = page.getByRole('button', { name: 'Font family' });
+  const fontChevron = fontTrigger.locator('svg.font-dropdown-chevron');
+  await expect(fontChevron).toBeVisible();
+  const chevronBox = await requiredBox(fontChevron);
+  expect(chevronBox.width).toBe(12);
+  expect(chevronBox.height).toBe(12);
+  await expect(page.getByRole('combobox', { name: 'Font family' })).toHaveCount(0);
+  await fontTrigger.click();
+  const fontListbox = page.getByRole('listbox', { name: 'Font family options' });
+  await expect(fontListbox).toBeVisible();
+  await expect(fontListbox).toBeFocused();
+  expect(await fontListbox.evaluate((element) => element.tagName.toLowerCase())).toBe('div');
+  expect(await fontListbox.evaluate((element) => getComputedStyle(element).maxHeight)).toBe('400px');
+  expect(await fontListbox.evaluate((element) => getComputedStyle(element).width)).toBe('260px');
+  const fontNames = await fontListbox.getByRole('option').allTextContents();
+  expect(fontNames.length).toBeGreaterThanOrEqual(10);
+  expect(fontNames.some((font) => /glyph|icon|symbol/i.test(font))).toBe(false);
+  await expect(fontListbox.getByText('Theme Fonts', { exact: true })).toHaveCSS('position', 'sticky');
+  await expect(fontListbox.getByText('All Fonts', { exact: true })).toHaveCSS('position', 'sticky');
+  await expect(fontListbox.getByRole('option').first()).toHaveCSS('height', '28px');
   await page.keyboard.press('Escape');
 
   const paper = await rect(page.locator('.paper-page').first());
@@ -63,14 +78,38 @@ test('keeps system fonts, rulers and ribbon groups aligned', async () => {
   expect(Math.abs(vertical.height - paper.height)).toBeLessThanOrEqual(1);
 
   const zeroTick = page.locator('.ruler-horizontal .ruler-tick:not(.ruler-tick-minor)').first();
-  await expect(zeroTick.locator('small')).toHaveText('0');
+  const zeroLabel = zeroTick.locator('small');
+  await expect(zeroLabel).toHaveText('0');
   const zeroBox = await requiredBox(zeroTick);
-  expect(Math.abs(zeroBox.x - (paper.x + 96))).toBeLessThanOrEqual(1);
+  const zeroLabelBox = await requiredBox(zeroLabel);
+  const textAreaLeft = await page.locator('.page-content-layer').evaluate((element) => element.getBoundingClientRect().left);
+  const zeroTextLeft = await zeroLabel.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getBoundingClientRect().left;
+  });
+  const firstTopLeftCropMark = await requiredBox(page.locator('.crop-marks i:nth-child(1)').first());
+  expect(Math.abs(zeroBox.x - textAreaLeft)).toBeLessThanOrEqual(1);
+  expect(Math.abs(zeroLabelBox.x - textAreaLeft)).toBeLessThanOrEqual(1);
+  expect(Math.abs(zeroTextLeft - textAreaLeft)).toBeLessThanOrEqual(1);
+  expect(Math.abs(firstTopLeftCropMark.x + 6 - textAreaLeft)).toBeLessThanOrEqual(1);
+  const verticalLabel = page.locator('.ruler-vertical .ruler-tick:not(.ruler-tick-minor) small').first();
+  const verticalTickBox = await requiredBox(page.locator('.ruler-vertical .ruler-tick:not(.ruler-tick-minor)').first());
+  const verticalLabelBox = await requiredBox(verticalLabel);
+  expect(await verticalLabel.evaluate((element) => getComputedStyle(element).writingMode)).toBe('horizontal-tb');
+  expect(await verticalLabel.evaluate((element) => getComputedStyle(element).fontSize)).toBe('9px');
+  expect(Math.abs(verticalLabelBox.y - verticalTickBox.y)).toBeLessThanOrEqual(1);
 
   const fontGroup = page.locator('[data-ribbon-group="Font"]');
   const fontRows = fontGroup.locator('[data-ribbon-row]');
   await expect(fontRows).toHaveCount(2);
-  const familyBox = await requiredBox(fontSelect);
+  const familyBox = await requiredBox(fontTrigger);
+  const sizeTrigger = page.getByRole('button', { name: 'Font size' });
+  const sizeBox = await requiredBox(sizeTrigger);
+  expect(familyBox.width).toBe(130);
+  expect(familyBox.height).toBe(22);
+  expect(sizeBox.width).toBe(60);
+  expect(sizeBox.height).toBe(22);
   const boldBox = await requiredBox(fontGroup.getByRole('button', { name: 'Bold' }));
   const italicBox = await requiredBox(fontGroup.getByRole('button', { name: 'Italic' }));
   const underlineBox = await requiredBox(fontGroup.getByRole('button', { name: 'Underline' }));

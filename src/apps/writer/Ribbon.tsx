@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { en } from '../../i18n/en';
 import { Icon } from '../../components/ui/Icon';
+import { FontDropdown } from '../../components/ui/FontDropdown';
+import type { FontDropdownGroup } from '../../components/ui/FontDropdown';
 import type { IconName } from '../../components/ui/Icon';
 import { RibbonButton } from '../../components/ribbon/RibbonButton';
 import { RibbonGroup } from '../../components/ribbon/RibbonGroup';
@@ -12,6 +14,7 @@ import { StylesGallery } from './StylesGallery';
 import { fontFamilies, fontSizes, normalizeSystemFonts } from './commands';
 import { documentThemes, marginPresets } from './model';
 import type { PageSettings, ShapeKind } from './model';
+import { filterSystemFonts, groupSystemFonts } from './store';
 import type { WriterDocument } from './store';
 import type { DialogKind } from './WriterDialogs';
 import { getActiveDocument, useShellStore } from '../../shell/store';
@@ -21,16 +24,16 @@ export const ribbonTabs = [{ id: 'file', label: en.backstage.title }, { id: 'hom
 export interface RibbonProps { doc: WriterDocument; onCommand: (name: string, value?: string) => void; onDialog: (kind: DialogKind) => void; onSettings: (patch: Partial<PageSettings>) => void; onStyle: (tag: string, className?: string) => void; onFile: (action: 'save' | 'export-pdf' | 'print') => void; ruler: boolean; gridlines: boolean; onRuler: () => void; onGridlines: () => void; onInsert: (html: string) => void; recipients: Record<string, string>[]; onRecipients: (rows: Record<string, string>[]) => void; onMerge: () => void; isDesktop: boolean; marginGuides: boolean; onMarginGuides: () => void; rulerUnit: RulerUnit; onRulerUnit: (unit: RulerUnit) => void; }
 export function WriterRibbon(props: RibbonProps) {
   const { doc, onCommand, onDialog, onSettings, onStyle, onFile, ruler, gridlines, onRuler, onGridlines, onInsert, recipients, onRecipients, onMerge, isDesktop, marginGuides, onMarginGuides, rulerUnit, onRulerUnit } = props;
-  const [tab, setTab] = useState('home'); const [inkColor, setInkColor] = useState('#2B579A'); const [recipientIndex, setRecipientIndex] = useState(0); const [systemFonts, setSystemFonts] = useState<string[]>([...fontFamilies]); const [selectedFont, setSelectedFont] = useState('Arial');
+  const [tab, setTab] = useState('home'); const [inkColor, setInkColor] = useState('#2B579A'); const [recipientIndex, setRecipientIndex] = useState(0); const [systemFonts, setSystemFonts] = useState<string[]>(() => filterSystemFonts(fontFamilies)); const [selectedFont, setSelectedFont] = useState('Arial'); const [selectedFontSize, setSelectedFontSize] = useState('11');
   useEffect(() => {
     const bridge = window.quire;
     if (!bridge) return;
     let active = true;
     void bridge.getSystemFonts().then((fonts) => {
-      const normalized = normalizeSystemFonts(fonts);
+      const normalized = filterSystemFonts(normalizeSystemFonts(fonts));
       if (active) setSystemFonts(normalized);
     }).catch(() => {
-      if (active) setSystemFonts([...fontFamilies]);
+      if (active) setSystemFonts(filterSystemFonts(fontFamilies));
     });
     return () => { active = false; };
   }, []);
@@ -42,8 +45,13 @@ export function WriterRibbon(props: RibbonProps) {
   const dropdown = (label: string, icon: IconName, items: [string, string, () => void][]): ReactNode => <RibbonDropdown key={label} label={label} icon={icon} items={items.map(([id, name, onSelect]) => ({ id, label: name, onSelect }))} />;
   const color = (label: string, value: string, change: (color: string) => void, icon: IconName = 'paint'): ReactNode => <label className="ribbon-color" key={label} title={label} data-tooltip={label}><Icon name={icon} /><input type="color" aria-label={label} value={value} onChange={(event) => { change(event.target.value); }} /><span className="color-bar" style={{ background: value }} /><Icon name="chevronDown" size={16} /></label>;
   const fontValue = systemFonts.includes(selectedFont) ? selectedFont : systemFonts[0] ?? selectedFont;
-  const fontSelect = <label className="ribbon-select font-family"><span className="sr-only">{en.editor.font}</span><select aria-label={en.editor.font} value={fontValue} onChange={(event) => { setSelectedFont(event.target.value); onCommand('fontName', event.target.value); }}>{systemFonts.map((font) => <option key={font} value={font}>{font}</option>)}</select></label>;
-  const sizeSelect = <label className="ribbon-select font-size"><span className="sr-only">{en.editor.size}</span><select aria-label={en.editor.size} defaultValue="11" onChange={(event) => { onCommand('fontSize', event.target.value); }}>{fontSizes.map((size) => <option key={size}>{size}</option>)}</select></label>;
+  const fontDropdownGroups = useMemo<FontDropdownGroup[]>(() => groupSystemFonts(systemFonts).map(({ kind, fonts }) => ({
+    label: kind === 'theme' ? en.ui.themeFonts : en.ui.allFonts,
+    options: fonts.map((font) => ({ value: font, label: font, fontFamily: font })),
+  })), [systemFonts]);
+  const fontSizeGroups = useMemo<FontDropdownGroup[]>(() => [{ options: fontSizes.map((size) => ({ value: String(size), label: String(size) })) }], []);
+  const fontSelect = <FontDropdown label={en.editor.font} value={fontValue} groups={fontDropdownGroups} width={130} className="font-family" testId="font-family-trigger" onChange={(font) => { setSelectedFont(font); onCommand('fontName', font); }} />;
+  const sizeSelect = <FontDropdown label={en.editor.size} value={selectedFontSize} groups={fontSizeGroups} width={60} className="font-size" testId="font-size-trigger" onChange={(size) => { setSelectedFontSize(size); onCommand('fontSize', size); }} />;
   const groups: { id: string; node: ReactNode }[] = [];
   if (tab === 'home') {
     groups.push(group('clipboard', en.editor.clipboard, <div className="ribbon-clipboard" key="clipboard">{button(en.editor.paste, 'paste', () => { void navigator.clipboard.readText().then((text) => { onInsert(text.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] ?? char)); }).catch(() => { onCommand('paste'); }); }, false, 'lg')}<div className="ribbon-stack ribbon-clipboard-stack">{iconButton(en.editor.cut, 'cut', () => { onCommand('cut'); })}{iconButton(en.editor.copy, 'copy', () => { onCommand('copy'); })}{iconButton(en.editor.painter, 'paint', () => { onCommand('formatPainter'); }, !!doc.painter)}</div></div>));

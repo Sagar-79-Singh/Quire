@@ -77,7 +77,10 @@ for (const size of [{ width: 1920, height: 1080 }, { width: 1366, height: 768 }]
     expect(Math.abs(vertical.x - (paper.x - 20))).toBeLessThanOrEqual(1);
     expect(Math.abs(vertical.y - paper.y)).toBeLessThanOrEqual(1);
 
-    await expect(page.locator('[data-document-name]')).toHaveCount(1);
+    const titleBar = page.locator('.title-bar');
+    await expect(titleBar.getByText('Document 1', { exact: true })).toHaveCount(1);
+    await expect(page.getByRole('tab', { name: 'Document 1', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Close document: Document 1' })).toBeVisible();
     await page.getByRole('tab', { name: 'File', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'File' })).toBeVisible();
     await page.keyboard.press('Escape');

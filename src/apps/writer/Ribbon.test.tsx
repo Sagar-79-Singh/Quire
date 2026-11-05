@@ -27,29 +27,48 @@ describe('Writer ribbon', () => {
     const paragraph = screen.getByRole('region', { name: 'Paragraph' });
     expect(font.querySelectorAll('[data-ribbon-row^="font-"]')).toHaveLength(2);
     expect(paragraph.querySelectorAll('[data-ribbon-row^="paragraph-"]')).toHaveLength(2);
-    expect(within(font).getByRole('combobox', { name: 'Font family' })).toBeInTheDocument();
+    expect(within(font).getByRole('button', { name: 'Font family' })).toBeInTheDocument();
+    expect(within(font).getByRole('button', { name: 'Font size' })).toBeInTheDocument();
+    expect(within(font).queryByRole('combobox')).not.toBeInTheDocument();
     expect(within(font).getByRole('button', { name: 'Bold' })).toBeInTheDocument();
     expect(within(paragraph).getByRole('button', { name: 'Bullets' })).toBeInTheDocument();
     expect(within(paragraph).getByRole('button', { name: 'Align left' })).toBeInTheDocument();
   });
-  it('loads sorted system fonts from IPC and falls back only when the call fails', async () => {
-    const getSystemFonts = vi.fn().mockResolvedValue(['Zulu Sans', 'Arial', 'DejaVu Sans']);
+  it('loads filtered, prioritized system fonts from IPC and falls back only when the call fails', async () => {
+    const getSystemFonts = vi.fn().mockResolvedValue(['Zulu Sans', 'Arial', 'DejaVu Sans', 'Symbola', 'Segoe UI', 'Calibri', 'Cambria', 'Times New Roman', 'Aptos', 'Georgia', 'Verdana', 'Glyph Icons', 'C059']);
     Object.defineProperty(window, 'quire', { configurable: true, value: { getSystemFonts } });
     const props = mount();
-    const fontSelect = screen.getByRole('combobox', { name: 'Font family' });
-    await waitFor(() => expect(Array.from(fontSelect.querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Arial', 'DejaVu Sans', 'Zulu Sans']));
-    expect(getSystemFonts).toHaveBeenCalledOnce();
-    await userEvent.selectOptions(fontSelect, 'DejaVu Sans');
+    const fontTrigger = screen.getByRole('button', { name: 'Font family' });
+    await waitFor(() => expect(getSystemFonts).toHaveBeenCalledOnce());
+    await userEvent.click(fontTrigger);
+    const fontListbox = screen.getByRole('listbox', { name: 'Font family options' });
+    await waitFor(() => expect(within(fontListbox).getAllByRole('option')).toHaveLength(10));
+    const fontNames = within(fontListbox).getAllByRole('option').map((option) => option.textContent);
+    expect(fontNames).toEqual(['Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Segoe UI', 'Aptos', 'Georgia', 'Verdana', 'DejaVu Sans', 'Zulu Sans']);
+    expect(fontNames.some((font) => /glyph|icon|symbol/i.test(font ?? ''))).toBe(false);
+    await userEvent.click(within(fontListbox).getByRole('option', { name: 'DejaVu Sans' }));
     expect(props.onCommand).toHaveBeenCalledWith('fontName', 'DejaVu Sans');
+    expect(fontTrigger).toHaveTextContent('DejaVu Sans');
 
     cleanup(); resetShellStore();
     const failedGetSystemFonts = vi.fn().mockRejectedValue(new Error('Font service unavailable'));
     Object.defineProperty(window, 'quire', { configurable: true, value: { getSystemFonts: failedGetSystemFonts } });
     mount();
-    const fallbackSelect = screen.getByRole('combobox', { name: 'Font family' });
-    await waitFor(() => expect(Array.from(fallbackSelect.querySelectorAll('option')).map((option) => option.textContent)).toContain('Courier New'));
-    expect(failedGetSystemFonts).toHaveBeenCalledOnce();
-    expect(fallbackSelect.querySelectorAll('option')).toHaveLength(9);
+    const fallbackTrigger = screen.getByRole('button', { name: 'Font family' });
+    await waitFor(() => expect(failedGetSystemFonts).toHaveBeenCalledOnce());
+    await userEvent.click(fallbackTrigger);
+    expect(screen.getByRole('listbox', { name: 'Font family options' }).querySelectorAll('[role="option"]')).toHaveLength(9);
+    expect(screen.getByRole('option', { name: 'Courier New' })).toBeInTheDocument();
+  });
+  it('uses the custom font-size menu with the fixed size choices', async () => {
+    const props = mount();
+    const trigger = screen.getByRole('button', { name: 'Font size' });
+    await userEvent.click(trigger);
+    const listbox = screen.getByRole('listbox', { name: 'Font size options' });
+    expect(within(listbox).getAllByRole('option').map((option) => option.textContent)).toEqual(['8', '9', '10', '11', '12', '14', '16', '18', '20', '22', '24', '26', '28', '36', '48', '72']);
+    await userEvent.click(within(listbox).getByRole('option', { name: '22' }));
+    expect(props.onCommand).toHaveBeenCalledWith('fontSize', '22');
+    expect(trigger).toHaveTextContent('22');
   });
   it('keeps clipboard commands icon-only in a vertical stack', () => {
     mount();

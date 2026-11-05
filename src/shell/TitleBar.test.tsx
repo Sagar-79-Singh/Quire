@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TitleBar } from './TitleBar';
@@ -7,6 +7,13 @@ import { resetShellStore, useShellStore } from './store';
 const io: ShellIO = { isDesktop: false, platform: 'browser', loadRecents: vi.fn(), saveRecents: vi.fn(), windowControl: vi.fn(), toggleFullscreen: vi.fn(), onMenuAction: vi.fn(() => () => {}), openFile: vi.fn().mockResolvedValue(null), saveFile: vi.fn().mockResolvedValue(null), exportPdf: vi.fn().mockResolvedValue(null), printFile: vi.fn().mockResolvedValue(undefined) };
 beforeEach(() => { resetShellStore(); });
 describe('TitleBar', () => {
+  it('renders one centered, click-to-rename document title in the title bar', async () => {
+    useShellStore.getState().openDocument({ title: 'Document 1' }); render(<TitleBar io={io} onAction={vi.fn()} />);
+    const titleBar = screen.getByRole('banner');
+    expect(within(titleBar).getAllByText('Document 1', { exact: true })).toHaveLength(1);
+    await userEvent.click(within(titleBar).getByRole('button', { name: 'Rename document' }));
+    expect(within(titleBar).getByRole('textbox', { name: 'Document name' })).toHaveValue('Document 1');
+  });
   it('renames inline and commits with Enter', async () => {
     useShellStore.getState().openDocument({ title: 'Original' }); render(<TitleBar io={io} onAction={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Rename document' })); const input = screen.getByRole('textbox', { name: 'Document name' }); await userEvent.clear(input); await userEvent.type(input, 'Renamed{Enter}');

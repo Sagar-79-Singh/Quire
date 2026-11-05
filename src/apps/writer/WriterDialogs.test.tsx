@@ -23,7 +23,7 @@ describe('Writer dialogs', () => {
     screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('wordCount'); expect(screen.getByText('2')).toBeInTheDocument();
   });
   it('renders help, about and shortcut content without network calls', () => {
-    mount('help'); expect(screen.getByText('Writing and formatting')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('about'); expect(screen.getByText('Version 1.0.2')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('shortcuts'); expect(screen.getByText('Ctrl+Shift+Z')).toBeInTheDocument();
+    mount('help'); expect(screen.getByText('Writing and formatting')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('about'); expect(screen.getByText('Version 1.0.3')).toBeInTheDocument(); screen.getAllByRole('button', { name: 'Close dialog' })[0]?.click(); mount('shortcuts'); expect(screen.getByText('Ctrl+Shift+Z')).toBeInTheDocument();
   });
   it('creates comments, symbols and equations', async () => {
     let props = mount('comment'); await userEvent.type(screen.getByLabelText('Comment text'), 'Review this'); await userEvent.click(screen.getByRole('button', { name: 'Insert' })); expect(props.onComment).toHaveBeenCalledWith('Review this');

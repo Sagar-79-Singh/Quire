@@ -20,7 +20,7 @@ export function normalizeSystemFonts(value: unknown): string[] {
   }
   return Array.from(unique.values()).sort((left, right) => left.localeCompare(right, 'en', { sensitivity: 'base' }));
 }
-export const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72] as const;
+export const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72] as const;
 export const symbols = ['©', '®', '™', '§', '¶', '†', '‡', '•', '…', '—', '–', '€', '£', '¥', '₹', '±', '×', '÷', '≠', '≈', '≤', '≥', '∞', 'α', 'β', 'π', 'Σ', '√', '°', '←', '→', '↔'] as const;
 export function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = []; let row: string[] = []; let field = ''; let quoted = false;

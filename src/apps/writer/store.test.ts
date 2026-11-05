@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createWriterStore, writerText } from './store';
+import { createWriterStore, filterSystemFonts, groupSystemFonts, writerText } from './store';
 let store: ReturnType<typeof createWriterStore>;
 beforeEach(() => { store = createWriterStore(); store.getState().ensure('doc', 'Title\n\nBody'); });
 describe('writer store', () => {
@@ -30,6 +30,23 @@ describe('writer store', () => {
     store.getState().update('doc', `<p><ins data-change="${first}">Added</ins><del data-change="${second}">Removed</del>Keep</p>`);
     store.getState().resolveChanges('doc', true, first); expect(store.getState().documents.doc?.html).toContain('Added'); expect(store.getState().documents.doc?.html).toContain('<del');
     store.getState().resolveChanges('doc', false); expect(store.getState().documents.doc?.html).toContain('Removed'); expect(store.getState().documents.doc?.changes).toEqual([]);
+  });
+  it('filters noisy system fonts, deduplicates names and prioritizes installed theme fonts', () => {
+    const fonts = filterSystemFonts(['zulu sans', 'Arial', ' arial ', 'Calibri', 'Cambria', 'Times New Roman', 'Segoe UI', 'Aptos', 'Georgia', 'Verdana', 'Glyphicons', 'Icon Pack', 'Symbola', 'Emoji One', 'Webdings', 'Acme UI Font', 'Noto Sans Math', 'LastResort', '1st Font', 'DS0000L', 'C059', 'DejaVu Sans']);
+    expect(fonts).toEqual(['Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Segoe UI', 'Aptos', 'Georgia', 'Verdana', 'DejaVu Sans', 'zulu sans']);
+    expect(filterSystemFonts(['ARIAL', 'FOOBAR', 'ABCDEFGHIJ', 'C059'])).toEqual(['Arial']);
+    expect(filterSystemFonts(["'Arial'", '"Calibri"'])).toEqual(['Arial', 'Calibri']);
+  });
+  it('groups the top three available theme fonts and keeps remaining fonts in the all-fonts group', () => {
+    expect(groupSystemFonts(['Arial', 'Calibri', 'Cambria', 'Times New Roman', 'DejaVu Sans'])).toEqual([
+      { kind: 'theme', fonts: ['Arial', 'Calibri', 'Cambria'] },
+      { kind: 'all', fonts: ['Times New Roman', 'DejaVu Sans'] },
+    ]);
+    expect(groupSystemFonts(['Georgia', 'DejaVu Sans'])).toEqual([
+      { kind: 'theme', fonts: ['Georgia'] },
+      { kind: 'all', fonts: ['DejaVu Sans'] },
+    ]);
+    expect(groupSystemFonts([])).toEqual([{ kind: 'theme', fonts: [] }, { kind: 'all', fonts: [] }]);
   });
   it('removes closed documents', () => { store.getState().remove('doc'); expect(store.getState().documents.doc).toBeUndefined(); });
 });
