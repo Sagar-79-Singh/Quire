@@ -11,6 +11,8 @@ describe('shortcuts', () => {
     expect(resolveShortcut(key('Tab', { shiftKey: true }))).toBe('previous-tab');
     expect(resolveShortcut(key('F11', { ctrlKey: false }))).toBe('fullscreen'); expect(resolveShortcut(key('F7', { ctrlKey: false }))).toBe('spelling');
     expect(resolveShortcut(key('+', { shiftKey: true, code: 'Equal' }))).toBe('zoom-in');
+    expect(resolveShortcut(key('F1'))).toBe('toggle-ribbon');
+    expect(resolveShortcut(key('P', { shiftKey: true }))).toBe('toggle-panel');
   });
   it('ignores unmodified, alt and unknown combinations', () => {
     expect(resolveShortcut(key('n', { ctrlKey: false }))).toBeNull();

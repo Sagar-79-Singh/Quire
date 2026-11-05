@@ -23,7 +23,7 @@ describe('Writer body', () => {
     expect(document.execCommand).toHaveBeenCalledWith('formatBlock', false, 'h1');
     await userEvent.click(screen.getByRole('tab', { name: 'View' }));
     await userEvent.click(screen.getAllByRole('button', { name: 'Gridlines' })[0]!); expect(screen.getByTestId('writer-canvas')).toHaveClass('with-gridlines');
-    await userEvent.click(screen.getAllByRole('button', { name: 'Ruler' })[0]!); expect(screen.queryByRole('img', { name: 'Horizontal ruler' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole('button', { name: 'Ruler' })[0]!); expect(screen.queryByRole('group', { name: 'Horizontal ruler' })).not.toBeInTheDocument();
   });
   it('has no body without an active document', () => { const { container } = mount(); expect(container.querySelector('.writer-app')).not.toBeInTheDocument(); });
 });

@@ -17,8 +17,8 @@ describe('writer store', () => {
     store.getState().load('doc', { html: '<p>Imported</p>', settings: { ...store.getState().documents.doc!.settings, paper: 'legal' } }); expect(store.getState().documents.doc?.past).toEqual([]);
   });
   it('tracks editing, selection, spelling and pagination preferences', () => {
-    const state = store.getState(); state.setTrackChanges('doc', true); state.setSpellcheck('doc', false); state.selectBlock('doc', 'a'); state.selectShape('doc', 'b'); state.setPagination('doc', 3, 2); state.setFormats('doc', ['bold']); state.setPainter('doc', 'color:red');
-    expect(store.getState().documents.doc).toMatchObject({ trackChanges: true, spellcheck: false, selectedBlock: 'a', selectedShape: 'b', pageCount: 3, currentPage: 2, activeFormats: ['bold'], painter: 'color:red' });
+    const state = store.getState(); state.setTrackChanges('doc', true); state.setSpellcheck('doc', false); state.selectBlock('doc', 'a'); state.selectShape('doc', 'b'); state.setPagination('doc', 3, 2); state.setFormats('doc', ['bold']); state.setPainter('doc', 'color:red'); state.setIndent('doc', { left: 24 });
+    expect(store.getState().documents.doc).toMatchObject({ trackChanges: true, spellcheck: false, selectedBlock: 'a', selectedShape: 'b', pageCount: 3, currentPage: 2, activeFormats: ['bold'], painter: 'color:red', indent: { left: 24, right: 0, firstLine: 0, hanging: 0 } });
   });
   it('adds, resolves and deletes comments', () => {
     const id = store.getState().addComment('doc', 'Clarify this paragraph', 100); store.getState().resolveComment('doc', id); expect(store.getState().documents.doc?.comments[0]?.resolved).toBe(true); store.getState().deleteComment('doc', id); expect(store.getState().documents.doc?.comments).toEqual([]);

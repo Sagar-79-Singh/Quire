@@ -53,12 +53,12 @@ test('opens a DOCX fixture and exports a PDF through native dialogs', async () =
   await page.keyboard.press('Control+O'); await expect(page.getByRole('textbox', { name: 'Document content' })).toContainText('Round trip content.');
   const pdfPath = join(dir, 'export.pdf');
   await app.evaluate(async ({ dialog }, path) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: path }); }, pdfPath);
-  await page.getByRole('button', { name: 'File', exact: true }).click(); await page.getByRole('button', { name: 'Export PDF', exact: true }).click();
+  await page.getByRole('tab', { name: 'File', exact: true }).click(); await page.getByRole('button', { name: 'Export PDF', exact: true }).click();
   await expect.poll(async () => { try { return (await stat(pdfPath)).size; } catch { return 0; } }).toBeGreaterThan(1000);
 });
 
 test('changes theme, zoom and ribbon mode without losing content', async () => {
   await page.getByRole('tab', { name: 'View', exact: true }).click(); await page.getByRole('button', { name: 'Zoom in', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Classic ribbon', exact: true }).click(); await expect(page.locator('.ribbon-surface')).toHaveClass(/expanded/);
+  await page.getByRole('button', { name: 'Compact ribbon (Ctrl+F1)', exact: true }).click(); await expect(page.locator('.ribbon-surface')).toHaveClass(/expanded/);
   await page.getByRole('combobox', { name: 'Search for tools and actions' }).fill('Dark theme'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter'); await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });

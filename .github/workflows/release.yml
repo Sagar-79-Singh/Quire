@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v1.0.0'
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -105,7 +105,7 @@ jobs:
             script: build:win
           - os: ubuntu-latest
             script: build:linux
-          - os: macos-latest
+          - os: macos-15
             script: build:mac
     runs-on: ${{ matrix.os }}
     steps:
@@ -143,10 +143,10 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Quire v1.0.0
+          tag_name: ${{ github.ref_name }}
+          name: Quire ${{ github.ref_name }}
           body: |
-            Quire v1.0.0 — offline desktop Writer by Sagar.
+            Quire ${{ github.ref_name }} — offline desktop Writer by Sagar.
 
             - Windows NSIS installer
             - Linux AppImage and deb

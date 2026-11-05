@@ -26,7 +26,7 @@ describe('App shell', () => {
   });
   it('opens backstage and hydrates recents before persisting', async () => {
     const io = createIO(); render(<App io={io} />); await userEvent.click(screen.getByRole('button', { name: 'Blank document' }));
-    await screen.findByRole('region', { name: 'Writer' }); await userEvent.click(screen.getByRole('button', { name: 'File' })); expect(screen.getByRole('dialog', { name: 'File' })).toBeInTheDocument();
+    await screen.findByRole('region', { name: 'Writer' }); await userEvent.click(screen.getByRole('tab', { name: 'File' })); expect(screen.getByRole('dialog', { name: 'File' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}'); expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     act(() => { useShellStore.getState().addRecent({ id: 'r', title: 'Test', path: '/test.docx', appType: 'writer', templateId: 'blank', modifiedAt: 100 }); });
     await waitFor(() => { expect(io.saveRecents).toHaveBeenCalledWith([expect.objectContaining({ id: 'r' })]); });
